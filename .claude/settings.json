@@ -30,7 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-check-update.js"
+            "command": "node .claude/hooks/gsd-check-update.js",
+            "timeout": 10000
           }
         ]
       }
@@ -149,7 +150,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-context-monitor.js"
+            "command": "node .claude/hooks/gsd-context-monitor.js",
+            "timeout": 10000
           }
         ]
       }

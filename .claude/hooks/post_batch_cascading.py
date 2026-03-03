@@ -43,7 +43,7 @@ from typing import Dict, List, Optional, Tuple
 
 PROJECT_DIR = os.environ.get(
     'CLAUDE_PROJECT_DIR',
-    '.'
+    str(Path(__file__).resolve().parent.parent.parent)
 )
 
 AGENTS_DIR = Path(PROJECT_DIR) / 'agents'

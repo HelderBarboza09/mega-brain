@@ -185,8 +185,7 @@ ATENCAO, senhor. {len(old_files)} arquivo(s) no INBOX com mais de {MAX_AGE_DAYS}
 +------------------------------------------------------------------------------+
 |  ACAO RECOMENDADA                                                            |
 +------------------------------------------------------------------------------+
-|  Executar: python3 SCRIPTS/organize_inbox_to_knowledge.py --execute          |
-|  Ou:       /inbox para ver lista completa                                    |
+|  Executar: /inbox para ver lista e organizar                                 |
 +------------------------------------------------------------------------------+
 
 REGRA #7: INBOX E TEMPORARIO - Organizar, nao acumular.
@@ -226,7 +225,7 @@ def log_alert(old_files: List[Dict]) -> bool:
             "oldest_file_days": old_files[0]["age_days"] if old_files else 0,
             "folders_affected": count_by_folder(old_files),
             "files": old_files[:20],  # Limitar a 20 arquivos no log
-            "action_suggested": "python3 SCRIPTS/organize_inbox_to_knowledge.py --execute",
+            "action_suggested": "/inbox para organizar",
         }
 
         with open(ALERT_LOG, "a", encoding="utf-8") as f:

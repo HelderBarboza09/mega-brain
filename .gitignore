@@ -120,6 +120,12 @@ vendor/
 scripts/tmp-scripts/
 scripts/company/
 
+# === PROCESSING (Pipeline runtime output, Per-user) ===
+processing/
+
+# === LOCAL OVERRIDES (Per-user) ===
+.gitignore.local
+
 # === OPERATIONAL LOGS & SYSTEM STATE (Per-user) ===
 *.jsonl
 system/backups/
