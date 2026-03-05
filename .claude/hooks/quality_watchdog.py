@@ -18,7 +18,7 @@ from typing import Dict, Optional
 PROJECT_ROOT = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
 AGENTS_PATH = PROJECT_ROOT / "agents"
 JARVIS_SUBAGENTS = PROJECT_ROOT / ".claude" / "jarvis" / "sub-agents"
-LOGS_PATH = PROJECT_ROOT / "logs"
+LOGS_PATH = PROJECT_ROOT / ".claude" / "logs"
 QUALITY_GAPS_LOG = LOGS_PATH / "quality_gaps.jsonl"
 
 

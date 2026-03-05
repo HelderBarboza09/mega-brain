@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
 MISSION_CONTROL = PROJECT_ROOT / '.claude' / 'mission-control'
 LEDGER_PATH = PROJECT_ROOT / '.claude' / 'LEDGER.md'
 INBOX_PATH = PROJECT_ROOT / 'inbox'
-LOGS_PATH = PROJECT_ROOT / 'logs' / 'stop_hooks'
+LOGS_PATH = PROJECT_ROOT / '.claude' / 'logs' / 'stop_hooks'
 LOGS_PATH.mkdir(parents=True, exist_ok=True)
 
 def count_inbox_files() -> int:
