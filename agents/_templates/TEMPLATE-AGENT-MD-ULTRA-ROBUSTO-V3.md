@@ -2335,9 +2335,9 @@ DNA Composition conforme definido em SOUL.md ^[SOUL.md:20-25]:
 
 | Pessoa | Tema | Path | Quando Usar |
 |--------|------|------|-------------|
-| {PESSOA} | {TEMA} | `/knowledge/SOURCES/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
-| {PESSOA} | {TEMA} | `/knowledge/SOURCES/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
-| {PESSOA} | {TEMA} | `/knowledge/SOURCES/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
+| {PESSOA} | {TEMA} | `/knowledge/external/sources/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
+| {PESSOA} | {TEMA} | `/knowledge/external/sources/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
+| {PESSOA} | {TEMA} | `/knowledge/external/sources/{PESSOA}/{CODIGO}-{TEMA}.md` | {CONTEXTO} |
 
 > ⚠️ **Esta tabela cresce conforme novos materiais são processados pelo Pipeline Jarvis**
 

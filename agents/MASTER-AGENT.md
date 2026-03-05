@@ -269,7 +269,7 @@ Iniciando processamento de [Z] novos arquivos...
     - Multi-área → Múltiplos agentes
 
 3.6 ATUALIZAR KNOWLEDGE BASES:
-    - Output para: `/knowledge/SOURCES/{FONTE}/{TEMA}/`
+    - Output para: `/knowledge/external/sources/{FONTE}/{TEMA}/`
     - Dossiês compilados em: `/knowledge/external/dossiers/persons/` e `THEMES/`
     - Cada agente consulta seu dossiê relevante
     - Sempre incluir: fonte, arquivo, classificação
