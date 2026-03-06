@@ -18,8 +18,8 @@ Data: 2026-02-26
 
 import json
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from entity_normalizer import load_registry, save_registry
@@ -122,7 +122,7 @@ def gather_pending_reviews(registry=None):
     try:
         import yaml
         if SKILLS_REGISTRY_PATH.exists():
-            with open(SKILLS_REGISTRY_PATH, "r", encoding="utf-8") as f:
+            with open(SKILLS_REGISTRY_PATH, encoding="utf-8") as f:
                 skills_reg = yaml.safe_load(f) or {}
             for persona, data in skills_reg.get("personas", {}).items():
                 count = data.get("skills_count", 0)
@@ -137,7 +137,7 @@ def gather_pending_reviews(registry=None):
 
     # --- HC-4: Merge candidates from review queue ---
     if REVIEW_QUEUE_PATH.exists():
-        with open(REVIEW_QUEUE_PATH, "r", encoding="utf-8") as f:
+        with open(REVIEW_QUEUE_PATH, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -176,7 +176,7 @@ def display_dashboard(pending):
             print(f"  [{i:2d}] {item['role']:25s}  ws={item['weighted_score']:6.1f}  "
                   f"src={item['sources']}  exec={item['executor_type']:8s}  {sow_icon}")
     else:
-        print(f"\n  AGENTS PENDENTES (HC-1): Nenhum")
+        print("\n  AGENTS PENDENTES (HC-1): Nenhum")
 
     # HC-2: Business Models
     items = pending["HC-2"]
@@ -187,7 +187,7 @@ def display_dashboard(pending):
             print(f"  [{i:2d}] {item['person']:25s}  chain_depth={item['role_chain_depth']}  "
                   f"team={item['team_size']}  depts={len(item['departments'])}")
     else:
-        print(f"\n  BUSINESS MODELS (HC-2): Nenhum")
+        print("\n  BUSINESS MODELS (HC-2): Nenhum")
 
     # HC-3: Skills
     items = pending["HC-3"]
@@ -197,7 +197,7 @@ def display_dashboard(pending):
         for i, item in enumerate(items, 1):
             print(f"  [{i:2d}] {item['persona']:25s}  {item['skills_count']} skills geradas")
     else:
-        print(f"\n  SKILLS (HC-3): Nenhum")
+        print("\n  SKILLS (HC-3): Nenhum")
 
     # HC-4: Merges
     items = pending["HC-4"]
@@ -209,18 +209,18 @@ def display_dashboard(pending):
                   f"\"{item.get('candidate_canonical', '?')}\" "
                   f"(score: {item.get('score', 0):.2f}, type: {item.get('entity_type', '?')})")
     else:
-        print(f"\n  MERGES (HC-4): Nenhum")
+        print("\n  MERGES (HC-4): Nenhum")
 
     print()
     print(f"  {'=' * 50}")
-    print(f"  Acoes: [numero] detalhar | approve/reject [id] | exit")
+    print("  Acoes: [numero] detalhar | approve/reject [id] | exit")
     print(f"  {'=' * 50}")
 
 
 def display_summary_json(pending):
     """Output summary as JSON (for programmatic use)."""
     summary = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "total_pending": sum(len(v) for v in pending.values()),
         "by_checkpoint": {k: len(v) for k, v in pending.items()},
         "hc1_agents": [
@@ -246,7 +246,7 @@ def approve_agent(role_name, registry=None):
         return False
 
     roles[role_name]["human_approved"] = True
-    roles[role_name]["approved_at"] = datetime.now(timezone.utc).isoformat()
+    roles[role_name]["approved_at"] = datetime.now(UTC).isoformat()
     save_registry(registry)
 
     _log_decision("approve_agent", role_name, "approved")
@@ -265,7 +265,7 @@ def reject_agent(role_name, registry=None):
         return False
 
     roles[role_name]["human_approved"] = False
-    roles[role_name]["rejected_at"] = datetime.now(timezone.utc).isoformat()
+    roles[role_name]["rejected_at"] = datetime.now(UTC).isoformat()
     save_registry(registry)
 
     _log_decision("reject_agent", role_name, "rejected")
@@ -281,7 +281,7 @@ def approve_merge(raw_name, canonical, registry=None):
     # Update review queue
     if REVIEW_QUEUE_PATH.exists():
         lines = []
-        with open(REVIEW_QUEUE_PATH, "r", encoding="utf-8") as f:
+        with open(REVIEW_QUEUE_PATH, encoding="utf-8") as f:
             for line in f:
                 try:
                     entry = json.loads(line.strip())
@@ -304,7 +304,7 @@ def _log_decision(action, entity, result):
     """Log review decision."""
     REVIEW_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "action": action,
         "entity": entity,
         "result": result,

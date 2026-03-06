@@ -19,9 +19,7 @@ Data: 2026-03-01
 
 import re
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from .query_analyzer import analyze_query, discover_agents, load_taxonomy
 
@@ -46,8 +44,15 @@ PARTIAL_LOAD = {"AGENT.md": DEFAULT_AGENT_HEADER_LINES, "MEMORY.md": None}
 class MemorySection:
     """Represents a ## section in MEMORY.md."""
 
-    __slots__ = ("title", "content", "start_line", "end_line", "size_bytes",
-                 "relevance_score", "domains_matched")
+    __slots__ = (
+        "content",
+        "domains_matched",
+        "end_line",
+        "relevance_score",
+        "size_bytes",
+        "start_line",
+        "title",
+    )
 
     def __init__(self, title: str, content: str, start_line: int, end_line: int):
         self.title = title
@@ -56,15 +61,15 @@ class MemorySection:
         self.end_line = end_line
         self.size_bytes = len(content.encode("utf-8"))
         self.relevance_score: float = 0.0
-        self.domains_matched: List[str] = []
+        self.domains_matched: list[str] = []
 
 
-def parse_memory_sections(text: str) -> List[MemorySection]:
+def parse_memory_sections(text: str) -> list[MemorySection]:
     """Parse MEMORY.md into ## sections."""
     lines = text.split("\n")
-    sections: List[MemorySection] = []
+    sections: list[MemorySection] = []
     current_title = ""
-    current_lines: List[str] = []
+    current_lines: list[str] = []
     current_start = 0
 
     for i, line in enumerate(lines):
@@ -120,21 +125,21 @@ LOW_PRIORITY_PATTERNS = [
 ]
 
 
-def _build_domain_keywords() -> Dict[str, List[str]]:
+def _build_domain_keywords() -> dict[str, list[str]]:
     """Build domain_id → list of keywords for matching."""
     tax = load_taxonomy()
-    domain_kw: Dict[str, List[str]] = {}
+    domain_kw: dict[str, list[str]] = {}
     for dom in tax.get("dominios", []):
         did = dom["id"]
-        keywords = [did] + dom.get("aliases", []) + dom.get("subdominios", [])
+        keywords = [did, *dom.get("aliases", []), *dom.get("subdominios", [])]
         domain_kw[did] = [k.lower() for k in keywords]
     return domain_kw
 
 
 def score_section(
     section: MemorySection,
-    query_domains: List[Dict[str, float]],
-    query_tokens: List[str],
+    query_domains: list[dict[str, float]],
+    query_tokens: list[str],
 ) -> float:
     """
     Score a memory section's relevance to the query.
@@ -203,7 +208,7 @@ def _read_file_safe(path: Path) -> str:
 def _read_file_lines(path: Path, max_lines: int) -> str:
     """Read first N lines of a file."""
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             lines = []
             for i, line in enumerate(f):
                 if i >= max_lines:
@@ -217,8 +222,8 @@ def _read_file_lines(path: Path, max_lines: int) -> str:
 def assemble_agent_context(
     agent_name: str,
     agent_path: Path,
-    query_domains: List[dict],
-    query_tokens: List[str],
+    query_domains: list[dict],
+    query_tokens: list[str],
     memory_budget_kb: int = DEFAULT_MEMORY_BUDGET_KB,
     agent_header_lines: int = DEFAULT_AGENT_HEADER_LINES,
 ) -> dict:
@@ -241,7 +246,7 @@ def assemble_agent_context(
             "memory_reduction_pct": float,
         }
     """
-    files: Dict[str, str] = {}
+    files: dict[str, str] = {}
 
     # 1. AGENT.md - header only
     agent_md = agent_path / "AGENT.md"
@@ -267,7 +272,7 @@ def assemble_agent_context(
     original_memory_size = 0
 
     # Load sections from split domain files or monolithic MEMORY.md
-    sections: List[MemorySection] = []
+    sections: list[MemorySection] = []
     if memory_dir.exists() and memory_dir.is_dir():
         # Split memory: load from domain files
         for domain_file in sorted(memory_dir.glob("*.md")):
@@ -297,7 +302,7 @@ def assemble_agent_context(
 
         # Select sections within budget
         budget_bytes = memory_budget_kb * 1024
-        selected: List[MemorySection] = []
+        selected: list[MemorySection] = []
         current_bytes = 0
 
         for sec in sections:
@@ -348,7 +353,7 @@ def assemble_agent_context(
 
 def assemble_debate_context(
     query: str,
-    agent_names: Optional[List[str]] = None,
+    agent_names: list[str] | None = None,
     max_agents: int = 5,
     total_budget_kb: int = DEFAULT_TOTAL_BUDGET_KB,
 ) -> dict:
@@ -454,7 +459,7 @@ def main():
     result = assemble_debate_context(query, agent_names=agent_names)
 
     print(f"\n{'='*70}")
-    print(f"CONTEXT ASSEMBLY")
+    print("CONTEXT ASSEMBLY")
     print(f"{'='*70}")
     print(f"Query: {result['query']}")
     print(f"Agents: {result['agent_count']}")

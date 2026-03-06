@@ -19,7 +19,6 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from .hybrid_query import hybrid_search
 
@@ -32,7 +31,7 @@ EVAL_DIR = BASE_DIR / ".data" / "rag_eval"
 # ---------------------------------------------------------------------------
 # TEST CASES
 # ---------------------------------------------------------------------------
-BASIC_TEST_SUITE: List[dict] = [
+BASIC_TEST_SUITE: list[dict] = [
     {
         "id": "T001",
         "query": "commission structure for closers",
@@ -200,7 +199,7 @@ def evaluate_test_case(test: dict) -> EvalResult:
 # SUITE RUNNER
 # ---------------------------------------------------------------------------
 def run_suite(
-    suite: Optional[List[dict]] = None,
+    suite: list[dict] | None = None,
     verbose: bool = True,
 ) -> dict:
     """Run a full evaluation suite.
@@ -219,7 +218,7 @@ def run_suite(
     if suite is None:
         suite = BASIC_TEST_SUITE
 
-    results: List[EvalResult] = []
+    results: list[EvalResult] = []
 
     for test in suite:
         if verbose:
@@ -254,7 +253,7 @@ def run_suite(
     return summary
 
 
-def save_results(summary: dict, eval_dir: Optional[Path] = None) -> Path:
+def save_results(summary: dict, eval_dir: Path | None = None) -> Path:
     """Save evaluation results to disk."""
     d = eval_dir or EVAL_DIR
     d.mkdir(parents=True, exist_ok=True)

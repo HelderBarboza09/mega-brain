@@ -7,11 +7,11 @@ Hook Events: PostToolUse (Write/Edit to agents/ or persona-registry.yaml)
 Version: 1.0.0
 """
 
-import sys
 import json
 import re
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent.parent
 CLAUDE_MD = BASE_DIR / ".claude" / "CLAUDE.md"
@@ -153,7 +153,7 @@ def main():
     except Exception as e:
         print(json.dumps({
             "continue": True,
-            "warning": f"CLAUDE.md sync error: {str(e)}"
+            "warning": f"CLAUDE.md sync error: {e!s}"
         }))
         sys.exit(0)
 

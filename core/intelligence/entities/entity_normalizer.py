@@ -19,13 +19,13 @@ Data: 2026-02-24
 """
 
 import json
-import os
 import re
 import sys
-import yaml
-from pathlib import Path
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
-from datetime import datetime, timezone
+from pathlib import Path
+
+import yaml
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -47,7 +47,7 @@ DEFAULT_MIN_OCCURRENCES_TO_CONFIRM = 3
 def load_trigger_config():
     """Load thresholds from trigger_config.yaml."""
     if TRIGGER_CONFIG_PATH.exists():
-        with open(TRIGGER_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(TRIGGER_CONFIG_PATH, encoding="utf-8") as f:
             return yaml.safe_load(f)
     return {}
 
@@ -69,14 +69,14 @@ def get_thresholds():
 def load_registry():
     """Load ENTITY-REGISTRY.json. Returns empty structure if not found."""
     if REGISTRY_PATH.exists():
-        with open(REGISTRY_PATH, "r", encoding="utf-8") as f:
+        with open(REGISTRY_PATH, encoding="utf-8") as f:
             return json.load(f)
     return create_empty_registry()
 
 
 def save_registry(registry):
     """Save ENTITY-REGISTRY.json with version bump."""
-    registry["metadata"]["updated_at"] = datetime.now(timezone.utc).isoformat()
+    registry["metadata"]["updated_at"] = datetime.now(UTC).isoformat()
     v = registry["metadata"].get("version", 0)
     registry["metadata"]["version"] = v + 1
     REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -89,8 +89,8 @@ def create_empty_registry():
     return {
         "metadata": {
             "version": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
             "description": "ENTITY-REGISTRY - Single Source of Truth for Mega Brain entities"
         },
         "persons": {},
@@ -112,7 +112,7 @@ def load_taxonomy():
     if _taxonomy_cache is not None:
         return _taxonomy_cache
     if TAXONOMY_PATH.exists():
-        with open(TAXONOMY_PATH, "r", encoding="utf-8") as f:
+        with open(TAXONOMY_PATH, encoding="utf-8") as f:
             _taxonomy_cache = yaml.safe_load(f)
     else:
         _taxonomy_cache = {}
@@ -404,13 +404,13 @@ def _increment_entity(entity_data, source_id=None):
         sources = entity_data.setdefault("sources", [])
         if source_id not in sources:
             sources.append(source_id)
-    entity_data["last_seen"] = datetime.now(timezone.utc).isoformat()
+    entity_data["last_seen"] = datetime.now(UTC).isoformat()
 
 
 def _create_entity(canonical, entity_type, source_id=None, aliases=None,
                    domain_ids=None):
     """Create a new entity entry."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     count_key = "mention_count" if entity_type in ("person", "role") else "occurrence_count"
     entity = {
         "canonical": canonical,
@@ -520,7 +520,7 @@ def _check_taxonomy(name, entity_type):
 def _add_to_review_queue(name, candidate_canonical, score, entity_type, source_id):
     """Add merge candidate to review queue."""
     entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "raw_name": name,
         "candidate_canonical": candidate_canonical,
         "score": round(score, 4),
@@ -551,7 +551,7 @@ def main():
 
     result = normalize_entity(name, entity_type, auto_save=False)
 
-    print(f"\n=== ENTITY NORMALIZER ===")
+    print("\n=== ENTITY NORMALIZER ===")
     print(f"Input:      '{name}'")
     print(f"Type:       {entity_type}")
     print(f"Canonical:  '{result['canonical']}'")

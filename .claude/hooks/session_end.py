@@ -10,8 +10,8 @@ Responsabilidades:
 """
 
 import json
-import sys
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -32,9 +32,9 @@ def load_jarvis_state():
     project_dir = get_project_dir()
     # Caminho primário: .claude/jarvis/STATE.json (consistente com session_start.py)
     state_path = Path(project_dir) / '.claude' / 'jarvis' / 'STATE.json'
-    
+
     if state_path.exists():
-        with open(state_path, 'r', encoding='utf-8') as f:
+        with open(state_path, encoding='utf-8') as f:
             return json.load(f)
     return create_default_state()
 
@@ -75,7 +75,7 @@ def save_jarvis_state(state):
     # Caminho primário: .claude/jarvis/STATE.json (consistente com session_start.py)
     state_path = Path(project_dir) / '.claude' / 'jarvis' / 'STATE.json'
     state_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(state_path, 'w', encoding='utf-8') as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
@@ -84,13 +84,13 @@ def create_handoff(state, session_info):
     project_dir = get_project_dir()
     handoff_path = Path(project_dir) / 'logs' / 'handoffs'
     handoff_path.mkdir(parents=True, exist_ok=True)
-    
+
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     handoff_file = handoff_path / f"HANDOFF-{timestamp}.md"
-    
+
     current = state.get('current_state', {})
     next_action = state.get('next_action', {})
-    
+
     content = f"""# HANDOFF - {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 > **Gerado por:** JARVIS Session End Hook
@@ -126,28 +126,28 @@ Prioridade: {next_action.get('priority', 'normal')}
 
 *Ready when you are, sir.*
 """
-    
+
     with open(handoff_file, 'w', encoding='utf-8') as f:
         f.write(content)
-    
+
     return str(handoff_file)
 
 def update_session_log(session_info):
     """Atualiza log da sessão com dados de encerramento."""
     project_dir = get_project_dir()
     log_path = Path(project_dir) / 'logs' / 'sessions'
-    
+
     # Encontrar log mais recente
     if log_path.exists():
         logs = sorted(log_path.glob('session-*.json'), reverse=True)
         if logs:
             latest_log = logs[0]
-            with open(latest_log, 'r', encoding='utf-8') as f:
+            with open(latest_log, encoding='utf-8') as f:
                 log_data = json.load(f)
-            
+
             log_data['ended_at'] = datetime.now().isoformat()
             log_data['reason'] = session_info.get('reason', 'unknown')
-            
+
             with open(latest_log, 'w', encoding='utf-8') as f:
                 json.dump(log_data, f, indent=2, ensure_ascii=False)
 
@@ -157,18 +157,18 @@ def main():
         # Ler input do hook (stdin)
         input_data = sys.stdin.read()
         hook_input = json.loads(input_data) if input_data else {}
-        
+
         # Carregar estado atual
         state = load_jarvis_state()
-        
+
         # Atualizar estado da sessão
         state['session']['is_active'] = False
         state['session']['last_action_at'] = datetime.now().isoformat()
         state['metrics']['sessions_total'] = state.get('metrics', {}).get('sessions_total', 0) + 1
-        
+
         # Salvar estado
         save_jarvis_state(state)
-        
+
         # Criar HANDOFF
         handoff_path = create_handoff(state, hook_input)
 
@@ -182,20 +182,20 @@ def main():
 
         # Atualizar log da sessão
         update_session_log(hook_input)
-        
+
         # Output (para logs internos, não exibido ao usuário)
         output = {
             'continue': True,
             'feedback': f"[JARVIS] Sessão encerrada. HANDOFF criado: {handoff_path}"
         }
-        
+
         print(json.dumps(output))
-        
+
     except Exception as e:
         # Em caso de erro, não bloquear o encerramento
         error_output = {
             'continue': True,
-            'feedback': f"[JARVIS] Hook de encerramento reportou: {str(e)}"
+            'feedback': f"[JARVIS] Hook de encerramento reportou: {e!s}"
         }
         print(json.dumps(error_output))
 

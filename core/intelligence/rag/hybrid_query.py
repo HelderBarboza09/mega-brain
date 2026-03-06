@@ -15,7 +15,6 @@ Data: 2026-03-01
 
 import sys
 import time
-from typing import Dict, List, Optional, Tuple
 
 from .hybrid_index import HybridIndex, get_index
 
@@ -33,9 +32,9 @@ RERANK_CANDIDATES = 50   # Max candidates for reranking
 # RECIPROCAL RANK FUSION
 # ---------------------------------------------------------------------------
 def reciprocal_rank_fusion(
-    rankings: List[List[Tuple[int, float]]],
+    rankings: list[list[tuple[int, float]]],
     k: int = RRF_K,
-) -> List[Tuple[int, float]]:
+) -> list[tuple[int, float]]:
     """Combine multiple rankings using RRF.
 
     Args:
@@ -44,7 +43,7 @@ def reciprocal_rank_fusion(
 
     Returns: [(doc_index, rrf_score), ...] sorted by score desc
     """
-    scores: Dict[int, float] = {}
+    scores: dict[int, float] = {}
 
     for ranking in rankings:
         for rank, (doc_idx, _score) in enumerate(ranking):
@@ -60,10 +59,10 @@ def reciprocal_rank_fusion(
 # ---------------------------------------------------------------------------
 def rerank(
     query: str,
-    candidates: List[Tuple[int, float]],
-    chunks: List[dict],
+    candidates: list[tuple[int, float]],
+    chunks: list[dict],
     top_k: int = DEFAULT_TOP_K,
-) -> List[Tuple[int, float]]:
+) -> list[tuple[int, float]]:
     """Rerank candidates. Uses zerank-2 if available, else pass-through.
 
     Args:
@@ -89,10 +88,10 @@ def rerank(
 
 def _rerank_zerank(
     query: str,
-    candidates: List[Tuple[int, float]],
-    chunks: List[dict],
+    candidates: list[tuple[int, float]],
+    chunks: list[dict],
     top_k: int,
-) -> List[Tuple[int, float]]:
+) -> list[tuple[int, float]]:
     """Rerank using ZeroEntropy zerank-2."""
     # Stub — activate when zeroentropy SDK is available
     # from zeroentropy import Client
@@ -106,7 +105,7 @@ def _rerank_zerank(
 # ---------------------------------------------------------------------------
 # STRATEGIC ORDERING (Lost in the Middle mitigation)
 # ---------------------------------------------------------------------------
-def strategic_order(results: List[Tuple[int, float]]) -> List[Tuple[int, float]]:
+def strategic_order(results: list[tuple[int, float]]) -> list[tuple[int, float]]:
     """Reorder results: most relevant at START and END of context.
 
     This mitigates the "lost in the middle" problem where LLMs pay more
@@ -158,8 +157,8 @@ class QueryResult:
 def hybrid_search(
     query: str,
     top_k: int = DEFAULT_TOP_K,
-    index: Optional[HybridIndex] = None,
-    filters: Optional[dict] = None,
+    index: HybridIndex | None = None,
+    filters: dict | None = None,
     use_strategic_order: bool = True,
 ) -> dict:
     """Full hybrid search pipeline.
@@ -239,10 +238,10 @@ def hybrid_search(
 
 
 def _apply_filters(
-    results: List[Tuple[int, float]],
-    chunks: List[dict],
+    results: list[tuple[int, float]],
+    chunks: list[dict],
     filters: dict,
-) -> List[Tuple[int, float]]:
+) -> list[tuple[int, float]]:
     """Filter results by metadata."""
     filtered = []
     for doc_idx, score in results:
@@ -266,7 +265,7 @@ def build_rag_context(
     query: str,
     top_k: int = 20,
     max_tokens: int = 8000,
-    index: Optional[HybridIndex] = None,
+    index: HybridIndex | None = None,
 ) -> dict:
     """Build RAG context for debate/conclave integration.
 

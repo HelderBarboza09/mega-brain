@@ -1,41 +1,40 @@
 # core/intelligence/ - Processing Scripts
 # Scripts that detect roles, generate skills, analyze themes, etc.
 
-from .pipeline.task_orchestrator import (
-    TaskOrchestrator,
-    load_workflow,
-    list_workflows,
-    resolve_workflow,
-    load_task_definition,
-    resolve_task,
-    ExecutionState,
-    WorkflowDefinition,
-    WorkflowPhase,
-    TaskDefinition,
-)
-
 from .pipeline.autonomous_processor import (
     AutonomousProcessor,
     FileQueue,
-    QueueItem,
     ProcessingResult,
     ProcessorState,
+    QueueItem,
+)
+from .pipeline.task_orchestrator import (
+    ExecutionState,
+    TaskDefinition,
+    TaskOrchestrator,
+    WorkflowDefinition,
+    WorkflowPhase,
+    list_workflows,
+    load_task_definition,
+    load_workflow,
+    resolve_task,
+    resolve_workflow,
 )
 
 __all__ = [
-    'TaskOrchestrator',
-    'load_workflow',
-    'list_workflows',
-    'resolve_workflow',
-    'load_task_definition',
-    'resolve_task',
-    'ExecutionState',
-    'WorkflowDefinition',
-    'WorkflowPhase',
-    'TaskDefinition',
     'AutonomousProcessor',
+    'ExecutionState',
     'FileQueue',
-    'QueueItem',
     'ProcessingResult',
     'ProcessorState',
+    'QueueItem',
+    'TaskDefinition',
+    'TaskOrchestrator',
+    'WorkflowDefinition',
+    'WorkflowPhase',
+    'list_workflows',
+    'load_task_definition',
+    'load_workflow',
+    'resolve_task',
+    'resolve_workflow',
 ]

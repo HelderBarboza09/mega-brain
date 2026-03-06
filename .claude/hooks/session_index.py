@@ -21,11 +21,10 @@ Date: 2026-03-01
 """
 
 import json
-import sys
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
-
 
 # ================================
 # CONFIGURATION
@@ -52,11 +51,11 @@ def load_index():
     """Load existing session index."""
     if INDEX_FILE.exists():
         try:
-            with open(INDEX_FILE, 'r', encoding='utf-8') as f:
+            with open(INDEX_FILE, encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, dict) and "sessions" in data:
                     return data
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
     return {"sessions": [], "version": "1.0.0"}
 
@@ -74,7 +73,7 @@ def save_index(index_data):
     try:
         with open(INDEX_FILE, 'w', encoding='utf-8') as f:
             json.dump(index_data, f, indent=2, ensure_ascii=False)
-    except IOError:
+    except OSError:
         pass
 
 
@@ -104,7 +103,7 @@ def extract_first_prompt_from_jsonl():
         return None
 
     try:
-        with open(CURRENT_JSONL, 'r', encoding='utf-8') as f:
+        with open(CURRENT_JSONL, encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -117,7 +116,7 @@ def extract_first_prompt_from_jsonl():
                         return content[:200].strip()
                 except json.JSONDecodeError:
                     continue
-    except IOError:
+    except OSError:
         pass
 
     return None

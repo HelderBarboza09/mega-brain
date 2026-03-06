@@ -20,11 +20,10 @@ ARQUITETURA:
 └─────────────────────────────────────────────────────────────────────────────┘
 """
 
+import json
 import os
 import re
-import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 PROJECT_ROOT = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
 SKILLS_PATH = PROJECT_ROOT / ".claude" / "skills"
@@ -47,7 +46,7 @@ CARGO_AGENT_KEYWORDS = {
 }
 
 
-def scan_skills() -> List[Tuple[Path, str]]:
+def scan_skills() -> list[tuple[Path, str]]:
     """Lista todas as pastas de skills válidas com tipo."""
     items = []
 
@@ -70,7 +69,7 @@ def scan_skills() -> List[Tuple[Path, str]]:
     return items
 
 
-def extract_metadata(item_path: Path, item_type: str) -> Dict:
+def extract_metadata(item_path: Path, item_type: str) -> dict:
     """Extrai metadados de SKILL.md ou AGENT.md."""
 
     if item_type == "skill":
@@ -137,7 +136,7 @@ def extract_metadata(item_path: Path, item_type: str) -> Dict:
     return metadata
 
 
-def build_index() -> Dict:
+def build_index() -> dict:
     """Constrói índice completo de skills e sub-agents."""
     items = scan_skills()
 
@@ -182,12 +181,12 @@ def build_index() -> Dict:
     return index
 
 
-def match_prompt(prompt: str, index: Dict = None) -> List[Dict]:
+def match_prompt(prompt: str, index: dict = None) -> list[dict]:
     """Retorna skills e sub-agents que matcham com o prompt."""
     if index is None:
         if INDEX_PATH.exists():
             try:
-                with open(INDEX_PATH, 'r', encoding='utf-8') as f:
+                with open(INDEX_PATH, encoding='utf-8') as f:
                     index = json.load(f)
             except Exception:
                 index = build_index()
@@ -292,7 +291,7 @@ def get_item_context(item_path: str, item_type: str) -> str:
         return get_subagent_context(item_path)
 
 
-def detect_cargo_agent(prompt: str) -> Optional[str]:
+def detect_cargo_agent(prompt: str) -> str | None:
     """Detecta se o prompt ativa um cargo agent. Retorna nome do agent-memory dir ou None."""
     prompt_lower = prompt.lower()
     for keyword, agent_name in CARGO_AGENT_KEYWORDS.items():

@@ -16,9 +16,7 @@ Data: 2026-03-01
 
 import json
 import re
-import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -54,7 +52,7 @@ def load_nav_map() -> dict:
             "version": "2.0.0",
             "dossiers": {"persons": {}, "themes": {}},
         }
-    with open(NAV_MAP_PATH, "r", encoding="utf-8") as f:
+    with open(NAV_MAP_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -67,7 +65,7 @@ def save_nav_map(nav_map: dict) -> None:
 # ---------------------------------------------------------------------------
 # DOSSIER PARSER
 # ---------------------------------------------------------------------------
-def extract_sections_with_chunks(filepath: Path) -> Dict[str, List[str]]:
+def extract_sections_with_chunks(filepath: Path) -> dict[str, list[str]]:
     """Read a dossier file and extract section headers with their chunk_ids.
 
     Returns: {section_name: [chunk_id, ...]}
@@ -78,9 +76,9 @@ def extract_sections_with_chunks(filepath: Path) -> Dict[str, List[str]]:
         return {}
 
     lines = content.split("\n")
-    sections: Dict[str, List[str]] = {}
+    sections: dict[str, list[str]] = {}
     current_section = ""
-    current_content: List[str] = []
+    current_content: list[str] = []
 
     for line in lines:
         if line.startswith("## "):
@@ -103,9 +101,9 @@ def extract_sections_with_chunks(filepath: Path) -> Dict[str, List[str]]:
     return sections
 
 
-def _extract_chunk_ids(text: str) -> List[str]:
+def _extract_chunk_ids(text: str) -> list[str]:
     """Extract all chunk_id-like references from text."""
-    found: List[str] = []
+    found: list[str] = []
 
     for pattern in CHUNK_ID_PATTERNS:
         for match in pattern.finditer(text):
@@ -114,9 +112,9 @@ def _extract_chunk_ids(text: str) -> List[str]:
     return found
 
 
-def count_total_chunks(sections: Dict[str, List[str]]) -> int:
+def count_total_chunks(sections: dict[str, list[str]]) -> int:
     """Count total unique chunk_ids across all sections."""
-    all_chunks: Set[str] = set()
+    all_chunks: set[str] = set()
     for chunks in sections.values():
         all_chunks.update(chunks)
     return len(all_chunks)
@@ -323,7 +321,7 @@ def main():
 
     # Details
     if result["details"]:
-        print(f"\nDetails:")
+        print("\nDetails:")
         for d in result["details"]:
             action = d["action"]
             if action == "updated":

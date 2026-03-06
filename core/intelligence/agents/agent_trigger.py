@@ -19,9 +19,10 @@ Data: 2026-02-25
 
 import json
 import sys
-import yaml
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from core.intelligence.entities.entity_normalizer import load_registry, load_taxonomy
@@ -38,7 +39,7 @@ TRIGGERS_LOG_PATH = BASE_DIR / "logs" / "triggers.jsonl"
 # ---------------------------------------------------------------------------
 def load_config():
     if TRIGGER_CONFIG_PATH.exists():
-        with open(TRIGGER_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(TRIGGER_CONFIG_PATH, encoding="utf-8") as f:
             return yaml.safe_load(f)
     return {}
 
@@ -230,7 +231,7 @@ def evaluate_cargo_agents(registry=None):
 
     thresholds = get_cargo_thresholds()
     tax = load_taxonomy()
-    taxonomy_cargos = set(k.upper() for k in tax.get("cargos", {}).keys())
+    taxonomy_cargos = set(k.upper() for k in tax.get("cargos", {}))
     roles = registry.get("roles", {})
 
     results = {"create": [], "candidates": [], "existing": []}
@@ -351,7 +352,7 @@ def evaluate_cargo_agents(registry=None):
 def log_decisions(person_results, cargo_results):
     """Log trigger decisions to triggers.jsonl."""
     TRIGGERS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     for entry in person_results.get("create", []):
         log_entry = {

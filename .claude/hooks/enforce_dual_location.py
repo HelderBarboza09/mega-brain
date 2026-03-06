@@ -10,13 +10,12 @@ Autor: JARVIS
 Data: 2026-01-11
 """
 
+import json
 import os
 import re
-import json
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Optional, List, Tuple
+from pathlib import Path
 
 # Caminhos
 BASE_PATH = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
@@ -43,7 +42,7 @@ def log_enforcement(action: str, batch_id: str, details: dict):
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def extract_batch_id_from_filename(filename: str) -> Optional[str]:
+def extract_batch_id_from_filename(filename: str) -> str | None:
     """
     Extrai o ID do batch do nome do arquivo.
     Suporta múltiplos formatos:
@@ -201,7 +200,7 @@ def create_json_from_md(batch_id: str, md_path: Path) -> bool:
 def create_md_from_json(batch_id: str, json_path: Path) -> bool:
     """Cria arquivo .md minimo a partir do .json existente."""
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(json_path, encoding="utf-8") as f:
             data = json.load(f)
 
         # Gera markdown minimo
@@ -289,7 +288,7 @@ JARVIS v3.33 | {datetime.now().strftime('%Y-%m-%d %H:%M')}
         return False
 
 
-def get_all_batches() -> Dict[str, Dict[str, Optional[Path]]]:
+def get_all_batches() -> dict[str, dict[str, Path | None]]:
     """
     Coleta todos os batches de ambos os locais.
     Retorna dict: batch_id -> {"md": Path or None, "json": Path or None}
@@ -317,7 +316,7 @@ def get_all_batches() -> Dict[str, Dict[str, Optional[Path]]]:
     return batches
 
 
-def enforce_dual_location(batch_id: str) -> Tuple[bool, str]:
+def enforce_dual_location(batch_id: str) -> tuple[bool, str]:
     """
     Garante que batch existe em ambos locais.
     Retorna (success, message)

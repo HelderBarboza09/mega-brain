@@ -24,18 +24,19 @@ Data: 2026-02-24
 """
 
 import json
-import os
 import re
 import sys
-from pathlib import Path
-from datetime import datetime, timezone
 from collections import Counter
+from pathlib import Path
 
 # Local imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from entity_normalizer import (
-    load_registry, save_registry, normalize_entity,
-    normalize_text, get_domain_aliases, load_taxonomy
+    get_domain_aliases,
+    load_registry,
+    normalize_entity,
+    normalize_text,
+    save_registry,
 )
 
 # ---------------------------------------------------------------------------
@@ -274,7 +275,7 @@ def analyze_chunk_file(filepath, registry=None):
     if not filepath.exists():
         return {"error": f"File not found: {filepath}"}
 
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
     source_id = data.get("source_id", data.get("source_hash", filepath.stem))
@@ -533,21 +534,21 @@ def main():
         print(f"Roles found:     {len(result['all_roles'])}")
         print(f"Domains touched: {len(result['all_domains'])}")
 
-        print(f"\n--- Top 20 Themes ---")
+        print("\n--- Top 20 Themes ---")
         for theme, count in result["all_themes"].most_common(20):
             print(f"  {count:4d}x  {theme}")
 
-        print(f"\n--- Top 10 Persons ---")
+        print("\n--- Top 10 Persons ---")
         for person, count in result["all_persons"].most_common(10):
             print(f"  {count:4d}x  {person}")
 
-        print(f"\n--- Domains ---")
+        print("\n--- Domains ---")
         for dom, count in result["all_domains"].most_common():
             print(f"  {count:4d}x  {dom}")
 
     elif len(sys.argv) > 1:
         filepath = sys.argv[1]
-        print(f"\n=== THEME ANALYZER: Single File ===\n")
+        print("\n=== THEME ANALYZER: Single File ===\n")
         result = analyze_chunk_file(filepath)
         print(json.dumps(result, indent=2, ensure_ascii=False))
 

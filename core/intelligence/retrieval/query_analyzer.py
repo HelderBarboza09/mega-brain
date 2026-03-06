@@ -19,9 +19,9 @@ Data: 2026-03-01
 import json
 import re
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+
+import yaml
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -35,7 +35,7 @@ MINDS_DIR = AGENTS_DIR / "minds"
 # ---------------------------------------------------------------------------
 # TAXONOMY CACHE
 # ---------------------------------------------------------------------------
-_taxonomy_cache: Optional[dict] = None
+_taxonomy_cache: dict | None = None
 
 
 def load_taxonomy() -> dict:
@@ -44,17 +44,17 @@ def load_taxonomy() -> dict:
     if _taxonomy_cache is not None:
         return _taxonomy_cache
     if TAXONOMY_PATH.exists():
-        with open(TAXONOMY_PATH, "r", encoding="utf-8") as f:
+        with open(TAXONOMY_PATH, encoding="utf-8") as f:
             _taxonomy_cache = yaml.safe_load(f) or {}
     else:
         _taxonomy_cache = {}
     return _taxonomy_cache
 
 
-def _build_domain_keyword_map() -> Dict[str, str]:
+def _build_domain_keyword_map() -> dict[str, str]:
     """Build flat map: keyword/alias/subdominio → domain_id."""
     tax = load_taxonomy()
-    kw_map: Dict[str, str] = {}
+    kw_map: dict[str, str] = {}
     for dom in tax.get("dominios", []):
         did = dom["id"]
         kw_map[did.lower()] = did
@@ -65,13 +65,13 @@ def _build_domain_keyword_map() -> Dict[str, str]:
     return kw_map
 
 
-def _build_cargo_domain_map() -> Dict[str, dict]:
+def _build_cargo_domain_map() -> dict[str, dict]:
     """Build map: CARGO_NAME → {dominios_primarios, dominios_secundarios, ...}."""
     tax = load_taxonomy()
     return {k.upper(): v for k, v in tax.get("cargos", {}).items()}
 
 
-def _build_person_domain_map() -> Dict[str, dict]:
+def _build_person_domain_map() -> dict[str, dict]:
     """Build map: PERSON_NAME → {expertise_primaria, expertise_secundaria, ...}."""
     tax = load_taxonomy()
     return {k.upper(): v for k, v in tax.get("pessoas", {}).items()}
@@ -80,16 +80,16 @@ def _build_person_domain_map() -> Dict[str, dict]:
 # ---------------------------------------------------------------------------
 # AGENT DISCOVERY
 # ---------------------------------------------------------------------------
-_agent_path_cache: Optional[Dict[str, Path]] = None
+_agent_path_cache: dict[str, Path] | None = None
 
 
-def discover_agents() -> Dict[str, Path]:
+def discover_agents() -> dict[str, Path]:
     """Discover all cargo agent directories. Returns {AGENT_NAME: path}."""
     global _agent_path_cache
     if _agent_path_cache is not None:
         return _agent_path_cache
 
-    agents: Dict[str, Path] = {}
+    agents: dict[str, Path] = {}
 
     # Scan cargo agents (e.g. agents/cargo/sales/closer/)
     if CARGO_DIR.exists():
@@ -135,7 +135,7 @@ def _cargo_name_to_taxonomy_key(cargo_name: str) -> str:
 # ---------------------------------------------------------------------------
 # QUERY ANALYSIS
 # ---------------------------------------------------------------------------
-def tokenize_query(query: str) -> List[str]:
+def tokenize_query(query: str) -> list[str]:
     """Tokenize query into lowercase words and common n-grams."""
     query_lower = query.lower()
     # Remove punctuation except hyphens
@@ -151,7 +151,7 @@ def tokenize_query(query: str) -> List[str]:
     return tokens
 
 
-def detect_domains(query: str) -> List[Tuple[str, float]]:
+def detect_domains(query: str) -> list[tuple[str, float]]:
     """
     Detect domains relevant to the query.
 
@@ -161,7 +161,7 @@ def detect_domains(query: str) -> List[Tuple[str, float]]:
     kw_map = _build_domain_keyword_map()
     tokens = tokenize_query(query)
 
-    domain_scores: Dict[str, float] = {}
+    domain_scores: dict[str, float] = {}
 
     for token in tokens:
         token_clean = token.strip().lower()
@@ -177,7 +177,7 @@ def detect_domains(query: str) -> List[Tuple[str, float]]:
     return sorted(domain_scores.items(), key=lambda x: -x[1])
 
 
-def detect_agents_mentioned(query: str) -> List[str]:
+def detect_agents_mentioned(query: str) -> list[str]:
     """Detect agent names explicitly mentioned in the query."""
     query_lower = query.lower()
     mentioned = []
@@ -206,10 +206,10 @@ def detect_agents_mentioned(query: str) -> List[str]:
 
 
 def select_agents_for_domains(
-    domains: List[Tuple[str, float]],
-    mentioned_agents: List[str],
+    domains: list[tuple[str, float]],
+    mentioned_agents: list[str],
     max_agents: int = 5,
-) -> List[Tuple[str, float, str]]:
+) -> list[tuple[str, float, str]]:
     """
     Select relevant agents based on detected domains.
 
@@ -218,7 +218,7 @@ def select_agents_for_domains(
     cargo_map = _build_cargo_domain_map()
     available_agents = discover_agents()
 
-    agent_scores: Dict[str, Tuple[float, str]] = {}
+    agent_scores: dict[str, tuple[float, str]] = {}
 
     # Explicitly mentioned agents get highest priority
     for agent in mentioned_agents:
@@ -317,16 +317,16 @@ def main():
     result = analyze_query(query)
 
     print(f"\n{'='*70}")
-    print(f"QUERY ANALYSIS")
+    print("QUERY ANALYSIS")
     print(f"{'='*70}")
     print(f"Query: {result['query']}")
-    print(f"\nDomains detected:")
+    print("\nDomains detected:")
     for d in result["domains"]:
         print(f"  - {d['id']} (score: {d['score']})")
 
     print(f"\nMentioned agents: {result['mentioned_agents'] or 'none'}")
 
-    print(f"\nRecommended agents:")
+    print("\nRecommended agents:")
     for a in result["recommended_agents"]:
         print(f"  - {a['name']} (score: {a['score']}, reason: {a['reason']})")
 

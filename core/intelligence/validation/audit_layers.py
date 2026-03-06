@@ -13,14 +13,13 @@ Classifies every file and folder in the repository into layers:
 Output: JSON + Markdown reports in docs/audit/
 """
 
+import argparse
+import json
 import os
 import re
 import sys
-import json
-import argparse
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Tuple, Optional
 
 # Classification patterns (from CONTEXT.md)
 L1_PATTERNS = [
@@ -138,7 +137,7 @@ SKIP_DIRS = {
 }
 
 
-def classify_path(path: Path, repo_root: Path, is_file: bool) -> Tuple[str, str]:
+def classify_path(path: Path, repo_root: Path, is_file: bool) -> tuple[str, str]:
     """
     Classify a path into a layer.
 
@@ -221,7 +220,7 @@ def classify_path(path: Path, repo_root: Path, is_file: bool) -> Tuple[str, str]
     return ('REVIEW', 'Unclear classification')
 
 
-def scan_repository(repo_root: Path, verbose: bool = False) -> Dict:
+def scan_repository(repo_root: Path, verbose: bool = False) -> dict:
     """
     Scan entire repository and classify all items.
 
@@ -321,7 +320,7 @@ def scan_repository(repo_root: Path, verbose: bool = False) -> Dict:
     total_items = sum(summary.values())
 
     return {
-        'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+        'generated_at': datetime.now(UTC).isoformat().replace('+00:00', 'Z'),
         'repo_root': str(repo_root),
         'summary': {
             'total_items': total_items,
@@ -333,7 +332,7 @@ def scan_repository(repo_root: Path, verbose: bool = False) -> Dict:
     }
 
 
-def generate_markdown_report(data: Dict, output_path: Path) -> None:
+def generate_markdown_report(data: dict, output_path: Path) -> None:
     """Generate human-readable markdown report."""
     with open(output_path, 'w') as f:
         f.write("# Mega Brain Layer Audit Report\n\n")

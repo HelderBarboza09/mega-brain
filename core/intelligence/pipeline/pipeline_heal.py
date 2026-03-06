@@ -16,7 +16,6 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
 
 try:
     import yaml
@@ -41,7 +40,7 @@ class CheckResult:
 class HealReport:
     source_id: str
     source_name: str
-    checks: List[CheckResult] = field(default_factory=list)
+    checks: list[CheckResult] = field(default_factory=list)
 
     @property
     def passed_count(self) -> int:
@@ -58,7 +57,7 @@ class HealReport:
         return int(self.passed_count / self.total_count * 100)
 
     @property
-    def failed_checks(self) -> List[CheckResult]:
+    def failed_checks(self) -> list[CheckResult]:
         return [c for c in self.checks if not c.passed]
 
 
@@ -69,19 +68,19 @@ class HealReport:
 class PipelineHealDetector:
     """Detects missed pipeline steps for processed sources."""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         if project_root is None:
             # Walk up from this file to find the project root
             project_root = Path(__file__).resolve().parent.parent.parent
         self.root = Path(project_root)
-        self._chunks_cache: Optional[Dict] = None
-        self._insights_cache: Optional[Dict] = None
-        self._narratives_cache: Optional[Dict] = None
-        self._registry_cache: Optional[Dict] = None
+        self._chunks_cache: dict | None = None
+        self._insights_cache: dict | None = None
+        self._narratives_cache: dict | None = None
+        self._registry_cache: dict | None = None
 
     # -- Lazy loaders -------------------------------------------------------
 
-    def _load_json(self, rel_path: str) -> Optional[Dict]:
+    def _load_json(self, rel_path: str) -> dict | None:
         path = self.root / rel_path
         if not path.exists():
             return None
@@ -90,7 +89,7 @@ class PipelineHealDetector:
         except (json.JSONDecodeError, OSError):
             return None
 
-    def _load_yaml_file(self, rel_path: str) -> Optional[Dict]:
+    def _load_yaml_file(self, rel_path: str) -> dict | None:
         if yaml is None:
             return None
         path = self.root / rel_path
@@ -111,7 +110,7 @@ class PipelineHealDetector:
             return False
 
     @property
-    def chunks_state(self) -> Dict:
+    def chunks_state(self) -> dict:
         if self._chunks_cache is None:
             self._chunks_cache = (
                 self._load_json("processing/chunks/CHUNKS-STATE.json") or {}
@@ -119,7 +118,7 @@ class PipelineHealDetector:
         return self._chunks_cache
 
     @property
-    def insights_state(self) -> Dict:
+    def insights_state(self) -> dict:
         if self._insights_cache is None:
             self._insights_cache = (
                 self._load_json("processing/insights/INSIGHTS-STATE.json") or {}
@@ -127,7 +126,7 @@ class PipelineHealDetector:
         return self._insights_cache
 
     @property
-    def narratives_state(self) -> Dict:
+    def narratives_state(self) -> dict:
         if self._narratives_cache is None:
             self._narratives_cache = (
                 self._load_json("processing/narratives/NARRATIVES-STATE.json") or {}
@@ -135,7 +134,7 @@ class PipelineHealDetector:
         return self._narratives_cache
 
     @property
-    def file_registry(self) -> Dict:
+    def file_registry(self) -> dict:
         if self._registry_cache is None:
             self._registry_cache = (
                 self._load_json("system/REGISTRY/file-registry.json") or {}
@@ -144,7 +143,7 @@ class PipelineHealDetector:
 
     # -- Source helpers ------------------------------------------------------
 
-    def _find_source(self, source_id: str) -> Optional[Dict]:
+    def _find_source(self, source_id: str) -> dict | None:
         for src in self.chunks_state.get("sources", []):
             if src.get("source_id") == source_id:
                 return src
@@ -166,7 +165,7 @@ class PipelineHealDetector:
 
     # -- Public API ---------------------------------------------------------
 
-    def list_sources(self) -> List[str]:
+    def list_sources(self) -> list[str]:
         """Return all source_ids from CHUNKS-STATE."""
         return [s["source_id"] for s in self.chunks_state.get("sources", [])]
 
@@ -579,7 +578,7 @@ class PipelineHealDetector:
 
     def format_report(self, report: HealReport) -> str:
         """Generate ASCII visual report."""
-        lines: List[str] = []
+        lines: list[str] = []
         w = 65
 
         lines.append("=" * w)

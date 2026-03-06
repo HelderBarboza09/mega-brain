@@ -21,11 +21,9 @@ import json
 import re
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
-from collections import defaultdict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from entity_normalizer import load_registry, save_registry, normalize_text
+from entity_normalizer import load_registry, normalize_text, save_registry
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -221,7 +219,7 @@ def detect_org_patterns(text, source_id=None):
 def detect_org_in_file(filepath, registry=None):
     """Detect org patterns across all chunks in a file."""
     filepath = Path(filepath)
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
     source_id = data.get("source_id", data.get("source_hash", filepath.stem))
@@ -376,22 +374,22 @@ def main():
         print(f"KPIs found:          {result['kpis_found']}")
 
         if result["hierarchy"]:
-            print(f"\n--- Hierarchy ---")
+            print("\n--- Hierarchy ---")
             for h in result["hierarchy"][:15]:
                 print(f"  {h['superior']} -> {h['subordinate']} ({h['relation']})")
 
         if result["team_sizes"]:
-            print(f"\n--- Team Sizes ---")
+            print("\n--- Team Sizes ---")
             for t in result["team_sizes"][:10]:
                 print(f"  {t['size']}x {t['role']}")
 
         if result["kpis"]:
-            print(f"\n--- KPIs ---")
+            print("\n--- KPIs ---")
             for k in result["kpis"][:10]:
                 print(f"  {k['role']}: {k['value']} {k['metric']}")
 
         if result["responsibilities"]:
-            print(f"\n--- Top Responsibilities ---")
+            print("\n--- Top Responsibilities ---")
             for r in result["responsibilities"][:10]:
                 print(f"  {r['role']}: {r['responsibility'][:80]}")
 

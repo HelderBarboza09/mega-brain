@@ -17,14 +17,11 @@ Versao: 1.0.0
 Data: 2026-02-26
 """
 
-import json
 import sys
-import yaml
 from pathlib import Path
-from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.intelligence.entities.entity_normalizer import load_registry, save_registry, load_taxonomy
+from core.intelligence.entities.entity_normalizer import load_registry, save_registry
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -407,17 +404,17 @@ def main():
         d = discover_tools(role)
         print(f"  Executor Type: {d['executor_type']}")
         print(f"  Autonomy: {d['autonomy_level']}% (Tier {d['autonomy_tier']})")
-        print(f"\n  Essential Tools:")
+        print("\n  Essential Tools:")
         for t in d["tools"]["essential"]:
             print(f"    - {t}")
-        print(f"\n  Recommended Tools:")
+        print("\n  Recommended Tools:")
         for t in d["tools"]["recommended"]:
             print(f"    - {t}")
         if d["tools"]["mcp_available"]:
-            print(f"\n  MCP Available:")
+            print("\n  MCP Available:")
             for t in d["tools"]["mcp_available"]:
                 print(f"    - {t}")
-        print(f"\n  Command Loader:")
+        print("\n  Command Loader:")
         for task in d["command_loader"]["mandatory_tasks"]:
             print(f"    {task['command']:25s} -> {task['task']}")
 

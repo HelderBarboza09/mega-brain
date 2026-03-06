@@ -20,12 +20,11 @@ Autor: JARVIS Autonomous System
 Data: 2026-01-11
 """
 
-import os
 import json
+import os
 import sys
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from pathlib import Path
 
 #==================================
 # CONFIGURACAO
@@ -49,7 +48,7 @@ IGNORE_FOLDERS = {"_BACKUP", "_OLD", "_ARCHIVE", "__pycache__"}
 #==================================
 
 
-def get_old_files(max_age_days: int = MAX_AGE_DAYS) -> List[Dict]:
+def get_old_files(max_age_days: int = MAX_AGE_DAYS) -> list[dict]:
     """
     Retorna lista de arquivos mais velhos que max_age_days.
 
@@ -104,14 +103,14 @@ def get_old_files(max_age_days: int = MAX_AGE_DAYS) -> List[Dict]:
                             "modified_at": mtime.isoformat(),
                         }
                     )
-            except (OSError, PermissionError) as e:
+            except (OSError, PermissionError):
                 # Ignorar arquivos inacessiveis
                 continue
 
     return sorted(old_files, key=lambda x: x["age_days"], reverse=True)
 
 
-def count_by_folder(old_files: List[Dict]) -> Dict[str, int]:
+def count_by_folder(old_files: list[dict]) -> dict[str, int]:
     """Agrupa arquivos antigos por pasta."""
     folder_counts = {}
     for f in old_files:
@@ -120,7 +119,7 @@ def count_by_folder(old_files: List[Dict]) -> Dict[str, int]:
     return dict(sorted(folder_counts.items(), key=lambda x: x[1], reverse=True))
 
 
-def generate_alert(old_files: List[Dict]) -> str:
+def generate_alert(old_files: list[dict]) -> str:
     """
     Gera mensagem de alerta formatada no estilo JARVIS.
 
@@ -194,7 +193,7 @@ REGRA #7: INBOX E TEMPORARIO - Organizar, nao acumular.
     return alert
 
 
-def generate_summary(old_files: List[Dict]) -> str:
+def generate_summary(old_files: list[dict]) -> str:
     """Gera resumo curto para o contexto do JARVIS."""
     if not old_files:
         return ""
@@ -202,7 +201,7 @@ def generate_summary(old_files: List[Dict]) -> str:
     return f"REGRA #7: {len(old_files)} arquivo(s) antigos no INBOX (>{MAX_AGE_DAYS} dias). Mais antigo: {old_files[0]['age_days']} dias."
 
 
-def log_alert(old_files: List[Dict]) -> bool:
+def log_alert(old_files: list[dict]) -> bool:
     """
     Loga alerta em jsonl para historico.
 
@@ -239,7 +238,7 @@ def log_alert(old_files: List[Dict]) -> bool:
         return False
 
 
-def check_inbox_health() -> Dict:
+def check_inbox_health() -> dict:
     """
     Verifica saude geral do INBOX.
 
@@ -296,7 +295,7 @@ def check_inbox_health() -> Dict:
 #==================================
 
 
-def get_session_context(old_files: List[Dict]) -> Dict:
+def get_session_context(old_files: list[dict]) -> dict:
     """
     Retorna contexto para integracao com session_start.
 
@@ -331,7 +330,7 @@ def main():
     """
     try:
         input_data = sys.stdin.read()
-        hook_input = json.loads(input_data) if input_data else {}
+        json.loads(input_data) if input_data else {}
 
         old_files = get_old_files()
 

@@ -71,7 +71,7 @@ def main():
     passed = 0
     failed = 0
     errors = []
-    for rel_path, expected, desc in SPOT_CHECKS:
+    for rel_path, expected, _desc in SPOT_CHECKS:
         abs_path = REPO_ROOT / rel_path
         try:
             layer, reason = classify_path(abs_path, REPO_ROOT, is_file=True)

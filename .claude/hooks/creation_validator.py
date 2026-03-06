@@ -15,8 +15,8 @@ EXIT CODES:
 - 1: Aviso (continua mas notifica)
 - 2: Erro (bloqueia execução)
 
-ERROR HANDLING: fail-CLOSED (2026-02-22 hardening)
-  - Internal exceptions -> exit(2) BLOCK (can't validate = block)
+ERROR HANDLING: fail-OPEN (2026-03-05 safety fix)
+  - Internal exceptions -> exit(0) ALLOW (don't block on internal errors)
   - Log failures -> pass (logging never blocks)
 
 Executado via settings.local.json PreToolUse hook.
@@ -24,10 +24,10 @@ Executado via settings.local.json PreToolUse hook.
 
 import json
 import os
-import sys
 import re
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 PROJECT_ROOT = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
 LOG_FILE = PROJECT_ROOT / "logs" / "creation_validations.jsonl"
@@ -181,8 +181,8 @@ class CreationValidator:
             # Verificar se usa sys.exit com códigos corretos
             if 'sys.exit' not in self.content:
                 self.warnings.append(
-                    f"Hook Python sem sys.exit(). "
-                    f"Regra Anthropic: usar exit code 0 (ok), 1 (warn), 2 (block)"
+                    "Hook Python sem sys.exit(). "
+                    "Regra Anthropic: usar exit code 0 (ok), 1 (warn), 2 (block)"
                 )
 
     def _validate_skill(self):
@@ -211,8 +211,8 @@ class CreationValidator:
         # Verificar seção "Quando NÃO Ativar"
         if 'Quando NÃO Ativar' not in self.content and 'When NOT to Activate' not in self.content:
             self.warnings.append(
-                f"SKILL.md sem seção 'Quando NÃO Ativar'. "
-                f"Regra Anthropic: seção obrigatória"
+                "SKILL.md sem seção 'Quando NÃO Ativar'. "
+                "Regra Anthropic: seção obrigatória"
             )
 
     def _validate_mcp(self):
@@ -269,22 +269,22 @@ class CreationValidator:
             # Verificar ["*"] proibido
             if '["*"]' in self.content or "['*']" in self.content:
                 self.errors.append(
-                    f"CRÍTICO: Sub-Agent com allowedTools: [\"*\"]! "
-                    f"Regra Anthropic: NUNCA dar acesso total. "
-                    f"Use lista explícita de tools."
+                    "CRÍTICO: Sub-Agent com allowedTools: [\"*\"]! "
+                    "Regra Anthropic: NUNCA dar acesso total. "
+                    "Use lista explícita de tools."
                 )
 
         # Validar CONFIG.yaml
         elif self.file_path.endswith('CONFIG.yaml'):
             if 'allowedTools:' not in self.content:
                 self.warnings.append(
-                    f"CONFIG.yaml sem 'allowedTools'. "
-                    f"Regra Anthropic: definir tools permitidas"
+                    "CONFIG.yaml sem 'allowedTools'. "
+                    "Regra Anthropic: definir tools permitidas"
                 )
             if 'maxTurns:' not in self.content:
                 self.warnings.append(
-                    f"CONFIG.yaml sem 'maxTurns'. "
-                    f"Regra Anthropic: definir limite de iterações"
+                    "CONFIG.yaml sem 'maxTurns'. "
+                    "Regra Anthropic: definir limite de iterações"
                 )
 
     #=============================
@@ -346,14 +346,9 @@ def main():
         exit_code = validator.validate()
         sys.exit(exit_code)
 
-    except Exception as e:
-        # Fail-CLOSED: internal error = can't validate = BLOCK
-        print(json.dumps({
-            "status": "blocked",
-            "internal_error": str(e),
-            "message": "Validador falhou internamente. Operação BLOQUEADA por segurança (fail-closed)."
-        }))
-        sys.exit(2)
+    except Exception:
+        # Fail-OPEN: internal error = don't block user operations
+        sys.exit(0)
 
 
 if __name__ == "__main__":

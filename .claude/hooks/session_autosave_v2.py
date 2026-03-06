@@ -30,17 +30,15 @@ Version: 2.0.0
 Date: 2026-01-11
 """
 
-import os
-import json
-import hashlib
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-import threading
 import atexit
-
+import json
+import os
+import threading
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
 
 #=================================
 # CONFIGURATION
@@ -111,14 +109,14 @@ class Action:
     timestamp: str
     action_type: str
     description: str
-    details: Dict[str, Any] = field(default_factory=dict)
-    files_affected: List[str] = field(default_factory=list)
+    details: dict[str, Any] = field(default_factory=dict)
+    files_affected: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Action':
+    def from_dict(cls, data: dict[str, Any]) -> 'Action':
         return cls(**data)
 
 
@@ -128,14 +126,14 @@ class FileModification:
     filepath: str
     operation: str  # created, modified, deleted
     timestamp: str
-    size_before: Optional[int] = None
-    size_after: Optional[int] = None
+    size_before: int | None = None
+    size_after: int | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'FileModification':
+    def from_dict(cls, data: dict[str, Any]) -> 'FileModification':
         return cls(**data)
 
 
@@ -145,25 +143,25 @@ class SessionData:
     session_id: str
     started_at: str
     last_activity: str
-    last_save: Optional[str]
+    last_save: str | None
     save_count: int
-    mission_state: Dict[str, Any]
-    actions: List[Action]
-    files_modified: List[FileModification]
-    pending_tasks: List[str]
-    decisions: List[Dict[str, Any]]
-    next_steps: List[str]
-    notes: List[str]
+    mission_state: dict[str, Any]
+    actions: list[Action]
+    files_modified: list[FileModification]
+    pending_tasks: list[str]
+    decisions: list[dict[str, Any]]
+    next_steps: list[str]
+    notes: list[str]
     conversation_summary: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data['actions'] = [a.to_dict() if isinstance(a, Action) else a for a in self.actions]
         data['files_modified'] = [f.to_dict() if isinstance(f, FileModification) else f for f in self.files_modified]
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SessionData':
+    def from_dict(cls, data: dict[str, Any]) -> 'SessionData':
         data['actions'] = [Action.from_dict(a) if isinstance(a, dict) else a for a in data.get('actions', [])]
         data['files_modified'] = [FileModification.from_dict(f) if isinstance(f, dict) else f for f in data.get('files_modified', [])]
         return cls(**data)
@@ -217,7 +215,7 @@ class SessionManager:
         """Carrega sessao existente ou cria nova."""
         if Config.AUTOSAVE_STATE.exists():
             try:
-                with open(Config.AUTOSAVE_STATE, 'r', encoding='utf-8') as f:
+                with open(Config.AUTOSAVE_STATE, encoding='utf-8') as f:
                     state = json.load(f)
 
                 # Verificar se sessao ainda e valida (menos de 2 horas)
@@ -253,21 +251,21 @@ class SessionManager:
             conversation_summary=""
         )
 
-    def _load_mission_state(self) -> Dict[str, Any]:
+    def _load_mission_state(self) -> dict[str, Any]:
         """Carrega estado da missao do MISSION-STATE.json."""
         if Config.MISSION_STATE.exists():
             try:
-                with open(Config.MISSION_STATE, 'r', encoding='utf-8') as f:
+                with open(Config.MISSION_STATE, encoding='utf-8') as f:
                     return json.load(f)
             except Exception:
                 pass
         return {"status": "unknown", "message": "MISSION-STATE.json nao encontrado"}
 
-    def _load_jarvis_state(self) -> Dict[str, Any]:
+    def _load_jarvis_state(self) -> dict[str, Any]:
         """Carrega estado do JARVIS."""
         if Config.JARVIS_STATE.exists():
             try:
-                with open(Config.JARVIS_STATE, 'r', encoding='utf-8') as f:
+                with open(Config.JARVIS_STATE, encoding='utf-8') as f:
                     return json.load(f)
             except Exception:
                 pass
@@ -280,8 +278,8 @@ class SessionManager:
     def log_action(self,
                    action_type: ActionType,
                    description: str,
-                   details: Dict[str, Any] = None,
-                   files_affected: List[str] = None) -> None:
+                   details: dict[str, Any] = None,
+                   files_affected: list[str] = None) -> None:
         """
         Registra uma acao na sessao.
 
@@ -343,7 +341,7 @@ class SessionManager:
     def log_decision(self,
                      decision: str,
                      reasoning: str,
-                     alternatives: List[str] = None) -> None:
+                     alternatives: list[str] = None) -> None:
         """
         Registra uma decisao tomada.
 
@@ -395,7 +393,7 @@ class SessionManager:
     # SAVE TRIGGERS
     #=============================
 
-    def trigger_batch_complete(self, batch_id: str, details: Dict = None) -> str:
+    def trigger_batch_complete(self, batch_id: str, details: dict = None) -> str:
         """Trigger: Batch completado."""
         self.log_action(
             ActionType.BATCH_PROCESS,
@@ -404,7 +402,7 @@ class SessionManager:
         )
         return self.save(SaveTrigger.BATCH_COMPLETE)
 
-    def trigger_task_complete(self, task_name: str, details: Dict = None) -> str:
+    def trigger_task_complete(self, task_name: str, details: dict = None) -> str:
         """Trigger: Tarefa significativa completada."""
         self.log_action(
             ActionType.OTHER,
@@ -485,7 +483,7 @@ class SessionManager:
 
         return False
 
-    def _check_and_save(self, trigger: SaveTrigger) -> Optional[str]:
+    def _check_and_save(self, trigger: SaveTrigger) -> str | None:
         """Verifica e salva se necessario."""
         if self.should_save(trigger):
             return self.save(trigger)
@@ -626,7 +624,7 @@ class SessionManager:
         for i, step in enumerate(self.session.next_steps, 1):
             content += f"{i}. {step}\n"
 
-        content += f"""
+        content += """
 
 ---
 
@@ -636,7 +634,7 @@ class SessionManager:
         for note in self.session.notes:
             content += f"- {note}\n"
 
-        content += f"""
+        content += """
 
 ---
 
@@ -703,7 +701,7 @@ class SessionManager:
 +{'='*70}+
 |{'MISSION STATE':^70}|
 +{'='*70}+
-| Fase: {str(current_state.get('phase', 'N/A')):>3} - {current_state.get('phase_name', 'N/A'):<54} |
+| Fase: {current_state.get('phase', 'N/A')!s:>3} - {current_state.get('phase_name', 'N/A'):<54} |
 | Status: {current_state.get('status', 'N/A'):<60} |
 | Progresso: {str(current_state.get('percent_complete', 0)) + '%':<58} |
 | Fonte: {current_state.get('source_code', 'N/A'):<61} |
@@ -811,7 +809,7 @@ class SessionManager:
         if not self.session.next_steps:
             md += "_Nenhum proximo passo definido._\n"
 
-        md += f"""
+        md += """
 
 ---
 
@@ -867,7 +865,7 @@ class SessionManager:
 # GLOBAL API
 #=================================
 
-_session_manager: Optional[SessionManager] = None
+_session_manager: SessionManager | None = None
 
 
 def get_session() -> SessionManager:
@@ -1088,7 +1086,7 @@ def main():
         print("-" * 40)
 
         # Teste completo
-        session = get_session()
+        get_session()
 
         # Registrar acoes
         log_action("Teste de acao 1", "other", {"teste": True})
@@ -1116,7 +1114,7 @@ def main():
         # Salvar
         result = trigger_save("test")
 
-        print(f"[JARVIS] Teste concluido!")
+        print("[JARVIS] Teste concluido!")
         print(f"[JARVIS] Sessao salva em: {result}")
         print("-" * 40)
 

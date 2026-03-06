@@ -15,11 +15,12 @@ Usage:
 import json
 import os
 import re
-import yaml
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
+
+import yaml
 
 # ============================================================================
 # Configuration and Constants
@@ -43,10 +44,10 @@ class TaskDefinition:
     name: str
     execution_type: str
     responsible: str
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    outputs: Dict[str, Any] = field(default_factory=dict)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    outputs: dict[str, Any] = field(default_factory=dict)
     description: str = ""
-    path: Optional[Path] = None
+    path: Path | None = None
 
 
 @dataclass
@@ -55,8 +56,8 @@ class WorkflowPhase:
     id: str
     name: str
     description: str = ""
-    steps: List[Dict[str, Any]] = field(default_factory=list)
-    checkpoint: Optional[Dict[str, Any]] = None
+    steps: list[dict[str, Any]] = field(default_factory=list)
+    checkpoint: dict[str, Any] | None = None
     order: int = 0
 
 
@@ -66,10 +67,10 @@ class WorkflowDefinition:
     id: str
     name: str
     description: str = ""
-    phases: List[WorkflowPhase] = field(default_factory=list)
-    transitions: List[Dict[str, Any]] = field(default_factory=list)
-    inputs: Dict[str, Any] = field(default_factory=dict)
-    outputs: Dict[str, Any] = field(default_factory=dict)
+    phases: list[WorkflowPhase] = field(default_factory=list)
+    transitions: list[dict[str, Any]] = field(default_factory=list)
+    inputs: dict[str, Any] = field(default_factory=dict)
+    outputs: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -80,7 +81,7 @@ class ProgressReport:
     progress_percent: float
     tasks_completed: int
     tasks_total: int
-    estimated_remaining_seconds: Optional[int]
+    estimated_remaining_seconds: int | None
     started_at: str
     elapsed_seconds: int
 
@@ -89,15 +90,15 @@ class ProgressReport:
 class ExecutionState:
     """Tracks the execution state of a workflow."""
     workflow_id: str
-    current_phase: Optional[str] = None
+    current_phase: str | None = None
     current_step: int = 0
     status: str = "not_started"  # not_started, in_progress, completed, failed
-    history: List[Dict[str, Any]] = field(default_factory=list)
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-    phase_outputs: Dict[str, Any] = field(default_factory=dict)
-    task_timings: Dict[str, float] = field(default_factory=dict)
-    phase_started_at: Optional[str] = None
+    history: list[dict[str, Any]] = field(default_factory=list)
+    started_at: str | None = None
+    completed_at: str | None = None
+    phase_outputs: dict[str, Any] = field(default_factory=dict)
+    task_timings: dict[str, float] = field(default_factory=dict)
+    phase_started_at: str | None = None
 
 
 # ============================================================================
@@ -122,7 +123,7 @@ def load_workflow(workflow_path: Path) -> WorkflowDefinition:
     if not workflow_path.exists():
         raise FileNotFoundError(f"Workflow file not found: {workflow_path}")
 
-    with open(workflow_path, 'r', encoding='utf-8') as f:
+    with open(workflow_path, encoding='utf-8') as f:
         data = yaml.safe_load(f)
 
     if not data or 'workflow' not in data:
@@ -156,7 +157,7 @@ def load_workflow(workflow_path: Path) -> WorkflowDefinition:
     return workflow
 
 
-def list_workflows() -> List[Path]:
+def list_workflows() -> list[Path]:
     """
     List all workflow YAML files in the WORKFLOW_DIR.
 
@@ -169,7 +170,7 @@ def list_workflows() -> List[Path]:
     return sorted(WORKFLOW_DIR.glob('*.yaml'))
 
 
-def resolve_workflow(workflow_id: str) -> Optional[Path]:
+def resolve_workflow(workflow_id: str) -> Path | None:
     """
     Find a workflow file by its ID.
 
@@ -217,7 +218,7 @@ def load_task_definition(task_path: Path) -> TaskDefinition:
     if not task_path.exists():
         raise FileNotFoundError(f"Task file not found: {task_path}")
 
-    with open(task_path, 'r', encoding='utf-8') as f:
+    with open(task_path, encoding='utf-8') as f:
         content = f.read()
 
     # Extract task anatomy table
@@ -278,7 +279,7 @@ def resolve_task(task_ref: str) -> Path:
     return task_path
 
 
-def _extract_table_section(content: str, section_header: str) -> Dict[str, Any]:
+def _extract_table_section(content: str, section_header: str) -> dict[str, Any]:
     """Extract a table section from markdown content."""
     pattern = rf'{section_header}.*?\n\|[^\n]+\|.*?\n((?:\|[^\n]+\n)+)'
     match = re.search(pattern, content, re.DOTALL)
@@ -321,7 +322,7 @@ def create_default_state(workflow_id: str) -> ExecutionState:
     )
 
 
-def load_state() -> Optional[ExecutionState]:
+def load_state() -> ExecutionState | None:
     """
     Load the current execution state from disk.
 
@@ -332,7 +333,7 @@ def load_state() -> Optional[ExecutionState]:
         return None
 
     try:
-        with open(STATE_PATH, 'r', encoding='utf-8') as f:
+        with open(STATE_PATH, encoding='utf-8') as f:
             data = json.load(f)
 
         # Reconstruct ExecutionState from dict
@@ -355,7 +356,7 @@ def save_state(state: ExecutionState) -> None:
         json.dump(asdict(state), f, indent=2)
 
 
-def log_execution(event: Dict[str, Any]) -> None:
+def log_execution(event: dict[str, Any]) -> None:
     """
     Append an execution event to the JSONL log.
 
@@ -402,7 +403,7 @@ class TaskOrchestrator:
 
         self.workflow = load_workflow(workflow_path)
         self.state = load_state() or create_default_state(workflow_id)
-        self.task_cache: Dict[str, TaskDefinition] = {}
+        self.task_cache: dict[str, TaskDefinition] = {}
 
         log_execution({
             'event': 'orchestrator_initialized',
@@ -410,7 +411,7 @@ class TaskOrchestrator:
             'phases': len(self.workflow.phases)
         })
 
-    def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute(self, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Execute all phases of the workflow sequentially.
 
@@ -452,7 +453,7 @@ class TaskOrchestrator:
 
         return {'success': True, 'outputs': inputs}
 
-    def _execute_phase(self, phase: WorkflowPhase, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_phase(self, phase: WorkflowPhase, inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Execute all steps in a workflow phase.
 
@@ -495,7 +496,7 @@ class TaskOrchestrator:
 
         return {'success': True, 'outputs': phase_outputs}
 
-    def _execute_step(self, step: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def _execute_step(self, step: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
         """
         Execute a single workflow step.
 
@@ -545,7 +546,7 @@ class TaskOrchestrator:
 
         return self.task_cache[task_ref]
 
-    def get_current_task(self) -> Optional[TaskDefinition]:
+    def get_current_task(self) -> TaskDefinition | None:
         """
         Get the current task to be executed based on state.
 
@@ -571,7 +572,7 @@ class TaskOrchestrator:
 
         return None
 
-    def mark_task_complete(self, task_id: str, outputs: Dict[str, Any]) -> None:
+    def mark_task_complete(self, task_id: str, outputs: dict[str, Any]) -> None:
         """
         Mark a task as complete and record its outputs.
 
@@ -766,15 +767,15 @@ if __name__ == '__main__':
 
 
 __all__ = [
-    'TaskOrchestrator',
-    'ProgressReport',
-    'load_workflow',
-    'list_workflows',
-    'resolve_workflow',
-    'load_task_definition',
-    'resolve_task',
     'ExecutionState',
+    'ProgressReport',
+    'TaskDefinition',
+    'TaskOrchestrator',
     'WorkflowDefinition',
     'WorkflowPhase',
-    'TaskDefinition',
+    'list_workflows',
+    'load_task_definition',
+    'load_workflow',
+    'resolve_task',
+    'resolve_workflow',
 ]

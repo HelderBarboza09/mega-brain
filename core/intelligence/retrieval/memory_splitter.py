@@ -21,16 +21,15 @@ Versao: 1.0.0
 Data: 2026-03-01
 """
 
-import re
 import shutil
 import sys
-import yaml
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-from .query_analyzer import load_taxonomy, discover_agents
-from .context_assembler import parse_memory_sections, MemorySection
+import yaml
+
+from .context_assembler import MemorySection, parse_memory_sections
+from .query_analyzer import discover_agents, load_taxonomy
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -53,18 +52,18 @@ INDEX_SECTIONS = {
 # ---------------------------------------------------------------------------
 # DOMAIN CLASSIFIER
 # ---------------------------------------------------------------------------
-def _build_keyword_to_domain() -> Dict[str, str]:
+def _build_keyword_to_domain() -> dict[str, str]:
     """Build flat map: keyword -> domain_id from DOMAINS-TAXONOMY.yaml."""
     tax = load_taxonomy()
-    kw_map: Dict[str, str] = {}
+    kw_map: dict[str, str] = {}
     for dom in tax.get("dominios", []):
         did = dom["id"]
-        for key in [did] + dom.get("aliases", []) + dom.get("subdominios", []):
+        for key in [did, *dom.get("aliases", []), *dom.get("subdominios", [])]:
             kw_map[key.lower()] = did
     return kw_map
 
 
-def classify_section(section: MemorySection, kw_map: Dict[str, str]) -> str:
+def classify_section(section: MemorySection, kw_map: dict[str, str]) -> str:
     """Classify a MEMORY section into a domain using keyword matching.
 
     Returns domain_id or DEFAULT_UNCATEGORIZED_DOMAIN.
@@ -73,7 +72,7 @@ def classify_section(section: MemorySection, kw_map: Dict[str, str]) -> str:
     content_sample = section.content[:3000].lower()
 
     # Score each domain
-    domain_scores: Dict[str, int] = {}
+    domain_scores: dict[str, int] = {}
     for keyword, domain_id in kw_map.items():
         hits = 0
         # Title match = stronger signal
@@ -131,8 +130,8 @@ def split_memory(
     kw_map = _build_keyword_to_domain()
 
     # Classify sections
-    domain_sections: Dict[str, List[MemorySection]] = {}
-    index_secs: List[MemorySection] = []
+    domain_sections: dict[str, list[MemorySection]] = {}
+    index_secs: list[MemorySection] = []
 
     for sec in sections:
         # Check if it's a priority/index section
@@ -178,7 +177,7 @@ def split_memory(
     memory_dir.mkdir(exist_ok=True)
 
     # 3. Write domain files
-    index_entries: List[dict] = []
+    index_entries: list[dict] = []
 
     for domain, secs in sorted(domain_sections.items()):
         domain_file = memory_dir / f"{domain}.md"
@@ -246,14 +245,14 @@ def split_memory(
 
 def _build_index_memory(
     agent_name: str,
-    index_sections: List[MemorySection],
-    domain_entries: List[dict],
+    index_sections: list[MemorySection],
+    domain_entries: list[dict],
     original_size: int,
 ) -> str:
     """Build the lightweight index MEMORY.md."""
     parts = []
     parts.append(f"# MEMORY: {agent_name.upper()}\n")
-    parts.append(f"> **Type:** Split index (domain files in `memory/` directory)")
+    parts.append("> **Type:** Split index (domain files in `memory/` directory)")
     parts.append(f"> **Original size:** {round(original_size / 1024, 1)}KB")
     parts.append(f"> **Split into:** {len(domain_entries)} domain files")
     parts.append(f"> **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
@@ -286,7 +285,7 @@ def _build_index_memory(
 def split_all_agents(
     min_memory_kb: int = 50,
     dry_run: bool = False,
-) -> List[dict]:
+) -> list[dict]:
     """Split MEMORY.md for all agents whose MEMORY exceeds min_memory_kb.
 
     Args:
@@ -298,7 +297,7 @@ def split_all_agents(
     agents = discover_agents()
     results = []
 
-    for name, path in sorted(agents.items()):
+    for _name, path in sorted(agents.items()):
         memory_path = path / "MEMORY.md"
         if not memory_path.exists():
             continue

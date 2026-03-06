@@ -28,14 +28,13 @@ Versao: 2.1.0
 Data: 2026-01-13
 """
 
+import json
 import os
 import re
-import json
-import yaml
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
+import yaml
 
 #=================================
 # CONFIGURATION
@@ -51,13 +50,14 @@ KNOWLEDGE_DIR = Path(PROJECT_DIR) / 'knowledge' / 'external'
 DOSSIERS_DIR = KNOWLEDGE_DIR / 'dossiers' / 'themes'
 LOGS_DIR = Path(PROJECT_DIR) / 'logs'
 CASCADING_LOG = LOGS_DIR / 'cascading.jsonl'
+MISSION_STATE = Path(PROJECT_DIR) / '.claude' / 'mission-control' / 'MISSION-STATE.json'
 
 
 #=================================
 # LOGGING
 #=================================
 
-def log_cascading_action(action: Dict) -> None:
+def log_cascading_action(action: dict) -> None:
     """
     Registra acao de cascateamento em JSONL.
 
@@ -72,7 +72,62 @@ def log_cascading_action(action: Dict) -> None:
         f.write(json.dumps(action, ensure_ascii=False) + '\n')
 
 
-def log_batch_result(batch_id: str, result: Dict) -> None:
+def _update_mission_state(batch_id: str, result: dict) -> None:
+    """
+    Update MISSION-STATE.json after successful batch cascading.
+    This is the Pipeline → Mission Control connection.
+    """
+    try:
+        MISSION_STATE.parent.mkdir(parents=True, exist_ok=True)
+
+        state = {}
+        if MISSION_STATE.exists():
+            with open(MISSION_STATE, 'r', encoding='utf-8') as f:
+                state = json.load(f)
+
+        current = state.setdefault('current_state', {})
+
+        # Increment batch counter
+        batch_current = current.get('batch_current', 0) + 1
+        current['batch_current'] = batch_current
+
+        batch_total = current.get('batch_total', 0)
+        if batch_total > 0:
+            current['percent_complete'] = round(
+                (batch_current / batch_total) * 100, 1
+            )
+
+        current['status'] = 'IN_PROGRESS'
+        current['last_batch_id'] = batch_id
+        current['last_batch_at'] = datetime.now().isoformat()
+
+        # Track cascading stats
+        cascading = state.setdefault('cascading', {})
+        cascading['last_run'] = datetime.now().isoformat()
+        cascading['last_batch'] = batch_id
+        cascading['total_agents'] = cascading.get('total_agents', 0) + len(result.get('agents', []))
+        cascading['total_playbooks'] = cascading.get('total_playbooks', 0) + len(result.get('playbooks', []))
+        cascading['total_dossiers'] = cascading.get('total_dossiers', 0) + len(result.get('dossiers', []))
+
+        with open(MISSION_STATE, 'w', encoding='utf-8') as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+
+        log_cascading_action({
+            'type': 'mission_state_updated',
+            'batch_id': batch_id,
+            'batch_current': batch_current,
+            'percent_complete': current.get('percent_complete', 0)
+        })
+
+    except Exception as e:
+        log_cascading_action({
+            'type': 'mission_state_update_error',
+            'batch_id': batch_id,
+            'error': str(e)
+        })
+
+
+def log_batch_result(batch_id: str, result: dict) -> None:
     """
     Registra resultado completo do cascateamento de um batch.
     """
@@ -87,7 +142,7 @@ def log_batch_result(batch_id: str, result: Dict) -> None:
 # DESTINATION EXTRACTION
 #=================================
 
-def extract_destinations(batch_content: str) -> Dict[str, List[Dict]]:
+def extract_destinations(batch_content: str) -> dict[str, list[dict]]:
     """
     Extrai destinos da secao DESTINO DO CONHECIMENTO.
 
@@ -278,7 +333,7 @@ def extract_destinations(batch_content: str) -> Dict[str, List[Dict]]:
     return destinations
 
 
-def extract_batch_metadata(batch_content: str) -> Dict:
+def extract_batch_metadata(batch_content: str) -> dict:
     """
     Extrai metadados do batch (source, ID, elementos, etc).
     """
@@ -391,7 +446,7 @@ def extract_batch_metadata(batch_content: str) -> Dict:
     return metadata
 
 
-def extract_ascii_boxes(content: str, prefix: str = 'FRAMEWORK') -> Dict[str, str]:
+def extract_ascii_boxes(content: str, prefix: str = 'FRAMEWORK') -> dict[str, str]:
     """
     Extrai blocos ASCII completos de uma secao.
 
@@ -479,7 +534,7 @@ def extract_ascii_boxes(content: str, prefix: str = 'FRAMEWORK') -> Dict[str, st
     return boxes
 
 
-def extract_framework_content(batch_content: str, framework_name: str) -> Optional[str]:
+def extract_framework_content(batch_content: str, framework_name: str) -> str | None:
     """
     Extrai o conteudo COMPLETO de um framework especifico do batch.
 
@@ -536,8 +591,8 @@ def extract_framework_content(batch_content: str, framework_name: str) -> Option
 # CASCADING FUNCTIONS
 #=================================
 
-def cascade_to_agents(agents: List[Dict], batch_id: str, metadata: Dict,
-                      batch_content: str = None) -> List[Dict]:
+def cascade_to_agents(agents: list[dict], batch_id: str, metadata: dict,
+                      batch_content: str = None) -> list[dict]:
     """
     Cascateia para agentes (PERSON e CARGO).
 
@@ -617,7 +672,7 @@ def cascade_to_agents(agents: List[Dict], batch_id: str, metadata: Dict,
     return actions
 
 
-def find_agent_path(agent_name: str) -> Optional[Path]:
+def find_agent_path(agent_name: str) -> Path | None:
     """
     Encontra o caminho de um agente pelo nome.
 
@@ -656,7 +711,7 @@ def find_agent_path(agent_name: str) -> Optional[Path]:
 
 
 def update_agent_memory(memory_path: Path, batch_id: str,
-                         frameworks: List[str], metadata: Dict,
+                         frameworks: list[str], metadata: dict,
                          batch_content: str = None) -> bool:
     """
     Atualiza MEMORY.md de um agente com novos frameworks.
@@ -720,8 +775,8 @@ Elementos totais: {metadata.get('elements_count', 'N/A')}
 
 
 def create_agent_memory(memory_path: Path, agent_name: str,
-                         batch_id: str, frameworks: List[str],
-                         metadata: Dict, batch_content: str = None) -> bool:
+                         batch_id: str, frameworks: list[str],
+                         metadata: dict, batch_content: str = None) -> bool:
     """
     Cria MEMORY.md basico para um agente.
 
@@ -790,8 +845,8 @@ def create_agent_memory(memory_path: Path, agent_name: str,
         return False
 
 
-def cascade_to_playbooks(playbooks: List[Dict], batch_id: str,
-                          metadata: Dict, batch_content: str = None) -> List[Dict]:
+def cascade_to_playbooks(playbooks: list[dict], batch_id: str,
+                          metadata: dict, batch_content: str = None) -> list[dict]:
     """
     Cascateia para playbooks.
 
@@ -851,7 +906,7 @@ def cascade_to_playbooks(playbooks: List[Dict], batch_id: str,
 
 
 def update_playbook(pb_path: Path, batch_id: str,
-                    description: str, metadata: Dict,
+                    description: str, metadata: dict,
                     batch_content: str = None) -> bool:
     """
     Atualiza playbook existente com novos frameworks.
@@ -925,7 +980,7 @@ def update_playbook(pb_path: Path, batch_id: str,
 
 
 def create_playbook(pb_path: Path, name: str, batch_id: str,
-                    description: str, metadata: Dict,
+                    description: str, metadata: dict,
                     batch_content: str = None) -> bool:
     """
     Cria novo playbook.
@@ -965,7 +1020,7 @@ def create_playbook(pb_path: Path, name: str, batch_id: str,
             else:
                 content += f"### {fw}\n\n*Detalhes em `{batch_id}`*\n\n"
 
-        content += f"""
+        content += """
 ---
 
 ## Heuristicas
@@ -979,7 +1034,7 @@ def create_playbook(pb_path: Path, name: str, batch_id: str,
             for heur in metadata.get('heuristics', []):
                 content += f"- {heur}\n"
 
-        content += f"""
+        content += """
 ---
 
 ## Metodologias
@@ -1051,7 +1106,7 @@ def create_playbook(pb_path: Path, name: str, batch_id: str,
         return False
 
 
-def cascade_to_dnas(dnas: List[Dict], batch_id: str, metadata: Dict) -> List[Dict]:
+def cascade_to_dnas(dnas: list[dict], batch_id: str, metadata: dict) -> list[dict]:
     """
     Cascateia para DNA-CONFIG.yaml dos agentes.
 
@@ -1109,12 +1164,12 @@ def cascade_to_dnas(dnas: List[Dict], batch_id: str, metadata: Dict) -> List[Dic
 
 
 def update_dna_config(config_path: Path, batch_id: str,
-                       elements_to_add: int, metadata: Dict) -> bool:
+                       elements_to_add: int, metadata: dict) -> bool:
     """
     Atualiza DNA-CONFIG.yaml com novos elementos.
     """
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding='utf-8') as f:
             config = yaml.safe_load(f) or {}
 
         # Atualizar batches processados
@@ -1150,8 +1205,8 @@ def update_dna_config(config_path: Path, batch_id: str,
         return False
 
 
-def cascade_to_dossiers(themes: List[Dict], batch_id: str,
-                         metadata: Dict, batch_content: str = None) -> List[Dict]:
+def cascade_to_dossiers(themes: list[dict], batch_id: str,
+                         metadata: dict, batch_content: str = None) -> list[dict]:
     """
     Cascateia para theme dossiers.
 
@@ -1204,7 +1259,7 @@ def cascade_to_dossiers(themes: List[Dict], batch_id: str,
     return actions
 
 
-def update_theme_dossier(dossier_path: Path, batch_id: str, metadata: Dict,
+def update_theme_dossier(dossier_path: Path, batch_id: str, metadata: dict,
                           batch_content: str = None) -> bool:
     """
     Atualiza theme dossier existente (REGRA #21).
@@ -1302,7 +1357,7 @@ def update_theme_dossier(dossier_path: Path, batch_id: str, metadata: Dict,
 
 
 def create_theme_dossier(dossier_path: Path, theme_name: str,
-                          batch_id: str, metadata: Dict,
+                          batch_id: str, metadata: dict,
                           batch_content: str = None) -> bool:
     """
     Cria novo theme dossier.
@@ -1348,7 +1403,7 @@ Este dossier consolida conhecimento sobre **{theme_name.replace('-', ' ').title(
             else:
                 content += f"### {fw}\n\n*Fonte: {batch_id}*\n\n"
 
-        content += f"""
+        content += """
 ---
 
 ## Heuristicas
@@ -1362,7 +1417,7 @@ Este dossier consolida conhecimento sobre **{theme_name.replace('-', ' ').title(
             for heur in metadata.get('heuristics', []):
                 content += f"- {heur}\n"
 
-        content += f"""
+        content += """
 ---
 
 ## Metodologias
@@ -1437,7 +1492,7 @@ Este dossier consolida conhecimento sobre **{theme_name.replace('-', ' ').title(
 # BATCH UPDATE
 #=================================
 
-def mark_cascading_complete(batch_path: str, cascaded_items: Dict) -> bool:
+def mark_cascading_complete(batch_path: str, cascaded_items: dict) -> bool:
     """
     Adiciona secao 'Cascateamento Executado' ao batch.
     """
@@ -1485,7 +1540,7 @@ def mark_cascading_complete(batch_path: str, cascaded_items: Dict) -> bool:
                         cascade_section += f"- [{status}] {name}\n"
                 cascade_section += "\n"
 
-        cascade_section += f"""
+        cascade_section += """
 ---
 
 *Cascateamento automatico via `post_batch_cascading.py`*
@@ -1510,7 +1565,7 @@ def mark_cascading_complete(batch_path: str, cascaded_items: Dict) -> bool:
 # MAIN ENTRY POINT
 #=================================
 
-def process_batch(batch_path: str) -> Dict:
+def process_batch(batch_path: str) -> dict:
     """
     Processa um batch e executa cascateamento completo.
 
@@ -1643,6 +1698,9 @@ def process_batch(batch_path: str) -> Dict:
         # Marcar cascateamento como completo no batch
         mark_cascading_complete(batch_path, result)
 
+        # Update MISSION-STATE.json (Pipeline → Mission Control connection)
+        _update_mission_state(batch_id, result)
+
         result['success'] = True
         log_batch_result(batch_id, result)
 
@@ -1726,7 +1784,7 @@ def main(batch_path: str = None):
     except Exception as e:
         error_output = {
             'continue': True,
-            'feedback': f"[JARVIS] Erro no hook de cascateamento: {str(e)}",
+            'feedback': f"[JARVIS] Erro no hook de cascateamento: {e!s}",
             'error': str(e)
         }
         print(json.dumps(error_output))

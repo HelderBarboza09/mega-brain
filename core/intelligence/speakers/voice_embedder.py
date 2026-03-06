@@ -11,9 +11,9 @@ def extract_embedding(audio_file: str, segment_start: float = None, segment_end:
     Returns numpy array or None if pyannote not available.
     """
     try:
-        import torch
         import numpy as np
-        from pyannote.audio import Model, Inference
+        import torch
+        from pyannote.audio import Inference, Model
         from pyannote.core import Segment
 
         model = Model.from_pretrained("pyannote/embedding",

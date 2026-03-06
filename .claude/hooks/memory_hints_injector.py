@@ -26,8 +26,8 @@ Hook Type: UserPromptSubmit
 """
 
 import json
-import sys
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -93,9 +93,9 @@ def load_state():
     if not STATE_FILE.exists():
         return {}
     try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
+        with open(STATE_FILE, encoding="utf-8") as f:
             return json.load(f)
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         return {}
 
 
@@ -186,7 +186,7 @@ def main():
     start_time = time.time()
 
     try:
-        input_data = sys.stdin.read()
+        sys.stdin.read()
 
         state = load_state()
         if not state:

@@ -8,9 +8,9 @@ Usage: python3 session_autosave.py <TOOL_NAME> "<TOOL_INPUT>"
 Exit codes: 0 = success, 1 = warning (non-blocking)
 """
 
-import sys
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 

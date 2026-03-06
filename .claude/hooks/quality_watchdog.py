@@ -11,9 +11,8 @@ REGRA #28: META-AGENT QUALITY AWARENESS
 import json
 import os
 import re
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Optional
+from pathlib import Path
 
 PROJECT_ROOT = Path(os.environ.get('CLAUDE_PROJECT_DIR', '.'))
 AGENTS_PATH = PROJECT_ROOT / "agents"
@@ -36,7 +35,7 @@ _PERSON_KEYWORDS_CACHE = None
 _CARGO_KEYWORDS_CACHE = None
 
 
-def _scan_agents_directory(subdir: str) -> Dict:
+def _scan_agents_directory(subdir: str) -> dict:
     """
     Dynamically scan agents/{subdir}/ to build keyword map.
     Each subdirectory name becomes an agent key, and keywords are
@@ -65,7 +64,7 @@ def _scan_agents_directory(subdir: str) -> Dict:
     return keywords
 
 
-def _get_person_keywords() -> Dict:
+def _get_person_keywords() -> dict:
     """Lazily load person keywords from agents/persons/ directory."""
     global _PERSON_KEYWORDS_CACHE
     if _PERSON_KEYWORDS_CACHE is None:
@@ -73,7 +72,7 @@ def _get_person_keywords() -> Dict:
     return _PERSON_KEYWORDS_CACHE
 
 
-def _get_cargo_keywords() -> Dict:
+def _get_cargo_keywords() -> dict:
     """Lazily load cargo keywords from agents/cargo/ directory (recursive)."""
     global _CARGO_KEYWORDS_CACHE
     if _CARGO_KEYWORDS_CACHE is None:
@@ -93,7 +92,7 @@ def _get_cargo_keywords() -> Dict:
     return _CARGO_KEYWORDS_CACHE
 
 
-def detect_agent_in_prompt(prompt: str) -> Dict:
+def detect_agent_in_prompt(prompt: str) -> dict:
     """
     Detecta qual agente está sendo requisitado no prompt.
 
@@ -124,7 +123,7 @@ def detect_agent_in_prompt(prompt: str) -> Dict:
 # MANDATORY SECTIONS EXTRACTION
 # ═══════════════════════════════════════════════════════════════════════════
 
-def extract_mandatory_sections(agent_path: Path) -> Dict:
+def extract_mandatory_sections(agent_path: Path) -> dict:
     """
     Extrai MANDATORY_SECTIONS do header do AGENT.md.
 
@@ -180,7 +179,7 @@ def extract_mandatory_sections(agent_path: Path) -> Dict:
     }
 
 
-def resolve_agent_path(agent_info: Dict) -> Optional[Path]:
+def resolve_agent_path(agent_info: dict) -> Path | None:
     """Resolve o caminho do agente baseado no tipo."""
     if not agent_info.get("name"):
         return None
@@ -280,12 +279,12 @@ def log_quality_gap(agent: str, score: int, missing: list, agent_type: str = "un
     try:
         with open(QUALITY_GAPS_LOG, "a", encoding='utf-8') as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except Exception as e:
+    except Exception:
         # Falha silenciosa - não deve interromper fluxo
         pass
 
 
-def log_watchdog_activation(agent_info: Dict, mandatory_found: bool):
+def log_watchdog_activation(agent_info: dict, mandatory_found: bool):
     """Loga ativação do watchdog para auditoria."""
     log_file = LOGS_PATH / "watchdog_activations.jsonl"
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -308,7 +307,7 @@ def log_watchdog_activation(agent_info: Dict, mandatory_found: bool):
 # MAIN INTERFACE
 # ═══════════════════════════════════════════════════════════════════════════
 
-def process_prompt(prompt: str) -> Dict:
+def process_prompt(prompt: str) -> dict:
     """
     Processa prompt e retorna contexto de qualidade se aplicável.
 

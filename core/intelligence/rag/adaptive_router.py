@@ -19,10 +19,9 @@ import re
 import sys
 import time
 from enum import Enum
-from typing import Dict, List, Optional
 
-from .hybrid_query import hybrid_search, build_rag_context
-from .graph_query import graph_search, classify_query as classify_graph_query
+from .graph_query import graph_search
+from .hybrid_query import hybrid_search
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +129,7 @@ def classify_intent(query: str) -> str:
     return "analytical"
 
 
-def select_pipeline(query: str, intent: Optional[str] = None) -> Pipeline:
+def select_pipeline(query: str, intent: str | None = None) -> Pipeline:
     """Select the best pipeline for a query based on intent.
 
     Args:
@@ -160,7 +159,7 @@ def select_pipeline(query: str, intent: Optional[str] = None) -> Pipeline:
 # ---------------------------------------------------------------------------
 def route_query(
     query: str,
-    pipeline: Optional[Pipeline] = None,
+    pipeline: Pipeline | None = None,
     max_tokens: int = 8000,
 ) -> dict:
     """Route a query through the selected pipeline and return results.
@@ -241,7 +240,7 @@ def route_query(
     return result
 
 
-def _extract_sources(results: List[dict]) -> List[dict]:
+def _extract_sources(results: list[dict]) -> list[dict]:
     """Extract source references from hybrid search results."""
     sources = []
     for r in results:
@@ -254,7 +253,7 @@ def _extract_sources(results: List[dict]) -> List[dict]:
     return sources
 
 
-def _extract_sources_from_fused(results: List[dict]) -> List[dict]:
+def _extract_sources_from_fused(results: list[dict]) -> list[dict]:
     """Extract source references from fused results."""
     sources = []
     for r in results:
@@ -267,7 +266,7 @@ def _extract_sources_from_fused(results: List[dict]) -> List[dict]:
     return sources
 
 
-def _build_context_string(results: List[dict], max_tokens: int) -> str:
+def _build_context_string(results: list[dict], max_tokens: int) -> str:
     """Build a formatted context string from results for LLM consumption."""
     parts = []
     total_chars = 0
@@ -320,7 +319,7 @@ def main():
     print(f"Latency: {result['latency_ms']}ms")
 
     if result["results"]:
-        print(f"\nTop results:")
+        print("\nTop results:")
         for i, r in enumerate(result["results"][:5]):
             rid = r.get("chunk_id", r.get("id", "?"))
             label = r.get("text_preview", r.get("label", ""))[:60]

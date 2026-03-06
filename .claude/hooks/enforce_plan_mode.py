@@ -15,8 +15,8 @@ Autor: JARVIS
 """
 
 import json
-import sys
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -211,7 +211,7 @@ def main():
         # Erro inesperado - logar e continuar (não bloquear)
         print(json.dumps({
             "continue": True,
-            "warning": f"enforce_plan_mode hook error: {str(e)}"
+            "warning": f"enforce_plan_mode hook error: {e!s}"
         }))
         sys.exit(0)  # Don't block on internal errors
 

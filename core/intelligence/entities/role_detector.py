@@ -21,15 +21,14 @@ Data: 2026-02-25
 import json
 import re
 import sys
-import yaml
-from pathlib import Path
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from entity_normalizer import (
-    load_registry, save_registry, normalize_entity, load_taxonomy
-)
+from entity_normalizer import load_registry, load_taxonomy, normalize_entity, save_registry
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -72,7 +71,7 @@ def _load_role_patterns():
         _emergence_cache = {"patterns": [], "stopwords": set()}
         return _patterns_cache, _inference_cache, _emergence_cache
 
-    with open(ROLE_PATTERNS_PATH, "r", encoding="utf-8") as f:
+    with open(ROLE_PATTERNS_PATH, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     # Separate role patterns from special sections
@@ -299,9 +298,9 @@ def _detect_emergent_roles(text, known_roles):
         "result", "end", "problem", "question", "answer", "example",
         "level", "type", "kind", "sort", "step", "stage", "process",
         "system", "model", "method", "plan", "goal", "value", "cost",
-        "price", "rate", "deal", "offer", "call", "meeting", "event",
+        "price", "rate", "deal", "offer", "meeting", "event",
         "launch", "growth", "revenue", "profit", "loss", "margin",
-        "lead", "leads", "pipeline", "funnel", "script", "pitch",
+        "leads", "pipeline", "funnel", "script", "pitch",
         "objection", "closing", "follow-up", "outreach", "campaign",
         "setting", "inbound", "outbound",
         # Pronouns / Determiners
@@ -463,7 +462,7 @@ def detect_roles_in_text(text, source_id=None, registry=None):
 
 def _create_role_entry(role_name, source_id=None, status="tracking"):
     """Create a new role entry with v2.0 fields."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     return {
         "canonical": role_name,
         "aliases": [],
@@ -526,7 +525,7 @@ def _update_role_detection(role_data, detection, source_id):
     history_entry = {
         "type": det_type,
         "weight": weight,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     if source_id:
         history_entry["source"] = source_id
@@ -543,7 +542,7 @@ def _update_role_detection(role_data, detection, source_id):
         role_data["detection_history"] = history[-MAX_DETECTION_HISTORY:]
 
     # Update last_seen
-    role_data["last_seen"] = datetime.now(timezone.utc).isoformat()
+    role_data["last_seen"] = datetime.now(UTC).isoformat()
 
     # Status lifecycle: emergent_candidate → tracking → active
     _update_role_status(role_data)
@@ -597,7 +596,7 @@ def detect_roles_in_file(filepath, registry=None, save=True):
         registry = load_registry()
 
     filepath = Path(filepath)
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
     source_id = data.get("source_id", data.get("source_hash", filepath.stem))
@@ -733,7 +732,7 @@ def _extract_context(text, start, end, window=80):
 def _check_role_trigger(role_canonical, registry):
     """Check if a role has crossed the threshold for agent creation (tiered)."""
     if TRIGGER_CONFIG_PATH.exists():
-        with open(TRIGGER_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(TRIGGER_CONFIG_PATH, encoding="utf-8") as f:
             config = yaml.safe_load(f)
     else:
         return None
@@ -782,7 +781,7 @@ def _check_role_trigger(role_canonical, registry):
             "tier": "established",
             "weighted_score": weighted_score,
             "source_count": source_count,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         _log_trigger(trigger)
         return trigger
@@ -830,7 +829,7 @@ def main():
                       f"tier={t.get('tier', '?')}, "
                       f"sources={t.get('source_count', '?')})")
         else:
-            print(f"\nNo new triggers activated.")
+            print("\nNo new triggers activated.")
 
     elif len(sys.argv) > 1 and sys.argv[1] == "--text":
         text = " ".join(sys.argv[2:])

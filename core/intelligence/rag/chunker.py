@@ -12,10 +12,9 @@ Data: 2026-03-01
 
 import hashlib
 import re
-import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional
+
+import yaml
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -40,8 +39,18 @@ INDEX_SOURCES = {
 class Chunk:
     """A text chunk with metadata."""
 
-    __slots__ = ("chunk_id", "text", "source_file", "person", "domain",
-                 "layer", "section", "start_char", "end_char", "metadata")
+    __slots__ = (
+        "chunk_id",
+        "domain",
+        "end_char",
+        "layer",
+        "metadata",
+        "person",
+        "section",
+        "source_file",
+        "start_char",
+        "text",
+    )
 
     def __init__(self, text: str, source_file: str, **kwargs):
         self.text = text
@@ -78,16 +87,16 @@ class Chunk:
 # ---------------------------------------------------------------------------
 # SPLITTING
 # ---------------------------------------------------------------------------
-def _split_by_sections(text: str) -> List[dict]:
+def _split_by_sections(text: str) -> list[dict]:
     """Split markdown text by ## headers, preserving hierarchy."""
     sections = []
     lines = text.split("\n")
     current_section = ""
-    current_lines: List[str] = []
+    current_lines: list[str] = []
     current_start = 0
     char_offset = 0
 
-    for i, line in enumerate(lines):
+    for _i, line in enumerate(lines):
         line_len = len(line) + 1  # +1 for newline
         if line.startswith("## "):
             if current_lines:
@@ -116,7 +125,7 @@ def _split_by_sections(text: str) -> List[dict]:
 
 
 def _recursive_split(text: str, max_size: int = CHUNK_SIZE,
-                     overlap: int = CHUNK_OVERLAP) -> List[str]:
+                     overlap: int = CHUNK_OVERLAP) -> list[str]:
     """Recursively split text into chunks with overlap."""
     if len(text) <= max_size:
         return [text] if len(text) >= MIN_CHUNK_SIZE else []
@@ -155,7 +164,7 @@ def _recursive_split(text: str, max_size: int = CHUNK_SIZE,
 # FILE CHUNKERS
 # ---------------------------------------------------------------------------
 def chunk_markdown(filepath: Path, person: str = "", domain: str = "",
-                   layer: str = "") -> List[Chunk]:
+                   layer: str = "") -> list[Chunk]:
     """Chunk a markdown file preserving ## section hierarchy."""
     try:
         text = filepath.read_text(encoding="utf-8")
@@ -191,10 +200,10 @@ def chunk_markdown(filepath: Path, person: str = "", domain: str = "",
     return chunks
 
 
-def chunk_yaml(filepath: Path, person: str = "", layer: str = "") -> List[Chunk]:
+def chunk_yaml(filepath: Path, person: str = "", layer: str = "") -> list[Chunk]:
     """Chunk a DNA YAML file — one chunk per entry."""
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = yaml.safe_load(f)
     except (yaml.YAMLError, OSError):
         return []
@@ -253,7 +262,7 @@ def chunk_yaml(filepath: Path, person: str = "", layer: str = "") -> List[Chunk]
 # ---------------------------------------------------------------------------
 # FULL INDEX
 # ---------------------------------------------------------------------------
-def chunk_all(sources: Optional[Dict[str, Path]] = None) -> List[Chunk]:
+def chunk_all(sources: dict[str, Path] | None = None) -> list[Chunk]:
     """Chunk all knowledge base files.
 
     Returns list of all chunks with metadata.
@@ -261,7 +270,7 @@ def chunk_all(sources: Optional[Dict[str, Path]] = None) -> List[Chunk]:
     if sources is None:
         sources = INDEX_SOURCES
 
-    all_chunks: List[Chunk] = []
+    all_chunks: list[Chunk] = []
 
     # 1. DNA YAMLs (per person)
     dna_dir = sources.get("dna")
@@ -321,8 +330,8 @@ def main():
     chunks = chunk_all()
 
     # Stats
-    by_layer: Dict[str, int] = {}
-    by_person: Dict[str, int] = {}
+    by_layer: dict[str, int] = {}
+    by_person: dict[str, int] = {}
     total_chars = 0
 
     for c in chunks:
@@ -333,10 +342,10 @@ def main():
 
     print(f"Total chunks: {len(chunks)}")
     print(f"Total chars: {total_chars:,} ({total_chars // 4:,} est. tokens)")
-    print(f"\nBy layer:")
+    print("\nBy layer:")
     for layer, count in sorted(by_layer.items()):
         print(f"  {layer}: {count}")
-    print(f"\nBy person:")
+    print("\nBy person:")
     for person, count in sorted(by_person.items()):
         print(f"  {person}: {count}")
     print(f"\n{'='*60}\n")

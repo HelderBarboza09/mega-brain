@@ -22,16 +22,14 @@ Data: 2026-02-24
 """
 
 import json
-import os
-import re
 import sys
-import yaml
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from collections import Counter
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from entity_normalizer import load_registry, save_registry
+from entity_normalizer import load_registry
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -47,7 +45,7 @@ DOSSIERS_THEMES_DIR = BASE_DIR / "knowledge" / "external" / "dossiers" / "themes
 def load_config():
     """Load trigger configuration."""
     if TRIGGER_CONFIG_PATH.exists():
-        with open(TRIGGER_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(TRIGGER_CONFIG_PATH, encoding="utf-8") as f:
             return yaml.safe_load(f)
     return {}
 
@@ -149,7 +147,7 @@ def evaluate_all_themes(registry=None):
     creation_thresholds = get_dossier_thresholds()
     update_thresholds = get_update_thresholds()
     status_config = load_config().get("status_labels", {}).get("dossier_readiness", {})
-    ready_score = status_config.get("ready", 25.0)
+    status_config.get("ready", 25.0)
     candidate_score = status_config.get("candidate", 15.0)
 
     results = {
@@ -229,8 +227,8 @@ def _check_update_needed(canonical, theme_data, thresholds):
     if dossier_path:
         full_path = BASE_DIR / dossier_path
         if full_path.exists():
-            mtime = datetime.fromtimestamp(full_path.stat().st_mtime, tz=timezone.utc)
-            age_days = (datetime.now(timezone.utc) - mtime).days
+            mtime = datetime.fromtimestamp(full_path.stat().st_mtime, tz=UTC)
+            age_days = (datetime.now(UTC) - mtime).days
             if age_days >= thresholds["stale_days"]:
                 reasons.append(f"stale: {age_days} days old (threshold: {thresholds['stale_days']})")
 
@@ -240,7 +238,7 @@ def _check_update_needed(canonical, theme_data, thresholds):
     if last_seen:
         try:
             last_dt = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
-            if (datetime.now(timezone.utc) - last_dt).days < 7:
+            if (datetime.now(UTC) - last_dt).days < 7:
                 # Recently active theme - may have new content
                 reasons.append("recently_active: new content detected within 7 days")
         except (ValueError, TypeError):
@@ -255,7 +253,7 @@ def _check_update_needed(canonical, theme_data, thresholds):
 def log_decisions(results):
     """Log trigger decisions to triggers.jsonl (MMOS pattern)."""
     TRIGGERS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     for action_type in ("create", "update"):
         for entry in results[action_type]:
@@ -296,7 +294,7 @@ def main():
     s = results["summary"]
     print(f"\n  Total themes:       {s['total_themes']}")
     print(f"  Existing dossiers:  {s['existing_dossiers']}")
-    print(f"  ---")
+    print("  ---")
     print(f"  CREATE (new):       {s['create']}")
     print(f"  UPDATE (stale):     {s['update']}")
     print(f"  CANDIDATES:         {s['candidates']}")
@@ -304,7 +302,7 @@ def main():
 
     # CREATE triggers
     if results["create"]:
-        print(f"\n--- CREATE DOSSIER TRIGGERS ---")
+        print("\n--- CREATE DOSSIER TRIGGERS ---")
         for entry in results["create"]:
             print(f"  [CREATE] {entry['theme']}")
             print(f"           Score: {entry['score']} | Occ: {entry['occurrences']} | Sources: {entry['sources']}")
@@ -313,7 +311,7 @@ def main():
 
     # UPDATE triggers
     if results["update"]:
-        print(f"\n--- UPDATE DOSSIER TRIGGERS ---")
+        print("\n--- UPDATE DOSSIER TRIGGERS ---")
         for entry in results["update"]:
             print(f"  [UPDATE] {entry['theme']}")
             print(f"           Score: {entry['score']} | Occ: {entry['occurrences']}")
@@ -322,7 +320,7 @@ def main():
 
     # CANDIDATES
     if results["candidates"]:
-        print(f"\n--- CANDIDATES (almost ready) ---")
+        print("\n--- CANDIDATES (almost ready) ---")
         for entry in results["candidates"][:10]:
             missing = ", ".join(entry.get("missing", []))
             print(f"  [CANDIDATE] {entry['theme']}  (score: {entry['score']}, missing: {missing})")

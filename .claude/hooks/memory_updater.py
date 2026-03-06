@@ -11,11 +11,12 @@ Triggers:
 """
 
 import json
-import sys
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
+
 
 def get_project_dir():
     """Obtem o diretorio do projeto."""
@@ -27,7 +28,7 @@ def load_memory():
     memory_path = Path(project_dir) / '.claude' / 'jarvis' / 'JARVIS-MEMORY.md'
 
     if memory_path.exists():
-        with open(memory_path, 'r', encoding='utf-8') as f:
+        with open(memory_path, encoding='utf-8') as f:
             return f.read()
     return None
 
@@ -83,7 +84,7 @@ def update_memory_file(section, content):
     if not memory_path.exists():
         return False
 
-    with open(memory_path, 'r', encoding='utf-8') as f:
+    with open(memory_path, encoding='utf-8') as f:
         memory = f.read()
 
     # Encontrar secao de decisoes e adicionar

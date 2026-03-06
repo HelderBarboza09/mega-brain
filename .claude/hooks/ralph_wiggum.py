@@ -17,12 +17,12 @@ Token: <promise>DONE</promise>
 Referência: https://github.com/chernyshov/ralph-wiggum
 """
 
-import sys
-import os
 import json
+import os
 import re
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Fix Windows cp1252 encoding
 if sys.platform == 'win32':

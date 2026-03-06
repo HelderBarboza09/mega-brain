@@ -20,13 +20,14 @@ Data: 2026-02-26
 import json
 import re
 import sys
-import yaml
-from pathlib import Path
-from datetime import datetime, timezone
 from collections import defaultdict
+from datetime import UTC, datetime
+from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from core.intelligence.entities.entity_normalizer import load_registry, save_registry, load_taxonomy
+from core.intelligence.entities.entity_normalizer import load_registry
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -82,7 +83,7 @@ def extract_frameworks_from_text(text, source_id=None, persona=None):
     Returns list of framework dicts with name, steps, evidence, etc.
     """
     frameworks = []
-    text_lower = text.lower()
+    text.lower()
 
     # 1. Find named frameworks
     for pattern in FRAMEWORK_INDICATORS[:3]:
@@ -152,7 +153,7 @@ def extract_frameworks_from_text(text, source_id=None, persona=None):
 def extract_frameworks_from_file(filepath):
     """Extract frameworks from a chunk file."""
     filepath = Path(filepath)
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
     source_id = data.get("source_id", data.get("source_hash", filepath.stem))
@@ -203,7 +204,7 @@ def scan_all_and_generate(registry=None, save=True):
     total_skills = 0
     skills_registry = {
         "version": 1,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "total_skills": 0,
         "personas": {},
     }
@@ -271,66 +272,66 @@ def _save_skill_md(persona_slug, skill):
 
     lines = [
         f"# {skill['name']}",
-        f"",
+        "",
         f"> **Skill ID:** {skill['skill_id']}",
         f"> **Source:** DNA Layer {skill['source_layer']} - {skill['source_persona']}",
         f"> **Type:** {skill['type']}",
-        f"> **Version:** 1.0.0 (auto-generated)",
-        f"",
+        "> **Version:** 1.0.0 (auto-generated)",
+        "",
     ]
 
     # When to Use
     lines.extend([
-        f"## Quando Usar",
-        f"",
+        "## Quando Usar",
+        "",
         f"Framework aplicavel quando o contexto envolve {skill['source_persona']} "
         f"e a situacao requer um processo estruturado de {skill['name'].lower()}.",
-        f"",
+        "",
     ])
 
     # When NOT to Use
     lines.extend([
-        f"## Quando NAO Usar",
-        f"",
-        f"- Contexto nao relacionado ao dominio original",
-        f"- Quando uma abordagem mais simples resolve",
-        f"- Quando o framework conflita com outro framework ativo",
-        f"",
+        "## Quando NAO Usar",
+        "",
+        "- Contexto nao relacionado ao dominio original",
+        "- Quando uma abordagem mais simples resolve",
+        "- Quando o framework conflita com outro framework ativo",
+        "",
     ])
 
     # Workflow
     lines.extend([
-        f"## Workflow",
-        f"",
+        "## Workflow",
+        "",
     ])
     if skill["workflow_steps"]:
         for i, step in enumerate(skill["workflow_steps"], 1):
             lines.append(f"{i}. {step}")
     else:
-        lines.append(f"_Framework detectado mas steps nao extraidos automaticamente. "
-                      f"Consultar evidencia original._")
+        lines.append("_Framework detectado mas steps nao extraidos automaticamente. "
+                      "Consultar evidencia original._")
     lines.append("")
 
     # Output
     lines.extend([
-        f"## Output Esperado",
-        f"",
+        "## Output Esperado",
+        "",
         f"Resultado estruturado seguindo os {skill['step_count']} passos do framework.",
-        f"",
+        "",
     ])
 
     # Evidence
     lines.extend([
-        f"## Evidencia e Atribuicao",
-        f"",
+        "## Evidencia e Atribuicao",
+        "",
         f"**Source ID:** {skill['source_id']}",
-        f"",
-        f"```",
+        "",
+        "```",
         f"{skill['evidence'][:500]}",
-        f"```",
-        f"",
-        f"---",
-        f"Auto-gerado por Mega Brain Intelligence Layer | {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
+        "```",
+        "",
+        "---",
+        f"Auto-gerado por Mega Brain Intelligence Layer | {datetime.now(UTC).strftime('%Y-%m-%d')}",
     ])
 
     with open(filepath, "w", encoding="utf-8") as f:
@@ -574,7 +575,7 @@ def main():
         print(f"Skills generated:        {result['total_skills_generated']}")
 
         if result["per_persona"]:
-            print(f"\n--- Per Persona ---")
+            print("\n--- Per Persona ---")
             for persona, count in sorted(result["per_persona"].items(),
                                           key=lambda x: -x[1]):
                 print(f"  {persona:30s}  {count} frameworks")

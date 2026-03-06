@@ -20,10 +20,6 @@ Data: 2026-03-01
 """
 
 import re
-import sys
-from collections import Counter
-from typing import Dict, List, Optional, Tuple
-
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -42,7 +38,7 @@ SPECULATION_MARKERS = [
 # ---------------------------------------------------------------------------
 # CLAIM EXTRACTION
 # ---------------------------------------------------------------------------
-def extract_claims(response: str) -> List[dict]:
+def extract_claims(response: str) -> list[dict]:
     """Extract verifiable claims from a response.
 
     A claim is a sentence that makes a factual assertion.
@@ -94,7 +90,7 @@ def extract_claims(response: str) -> List[dict]:
 # ---------------------------------------------------------------------------
 # CLAIM VERIFICATION
 # ---------------------------------------------------------------------------
-def verify_claim(claim: str, chunks: List[str]) -> dict:
+def verify_claim(claim: str, chunks: list[str]) -> dict:
     """Verify a single claim against retrieved chunks.
 
     Uses token overlap scoring (heuristic, no LLM needed).
@@ -118,7 +114,7 @@ def verify_claim(claim: str, chunks: List[str]) -> dict:
 
     best_score = 0.0
     best_idx = -1
-    best_terms: List[str] = []
+    best_terms: list[str] = []
 
     for idx, chunk in enumerate(chunks):
         chunk_tokens = _tokenize(chunk)
@@ -170,8 +166,8 @@ def verify_claim(claim: str, chunks: List[str]) -> dict:
 
 def verify_response(
     response: str,
-    chunks: List[str],
-    chunk_ids: Optional[List[str]] = None,
+    chunks: list[str],
+    chunk_ids: list[str] | None = None,
 ) -> dict:
     """Verify an entire response against retrieved chunks.
 
@@ -272,7 +268,7 @@ def verify_response(
 # ---------------------------------------------------------------------------
 # CORRECTIVE RAG (CRAG) PATTERN
 # ---------------------------------------------------------------------------
-def suggest_corrections(verification: dict) -> List[dict]:
+def suggest_corrections(verification: dict) -> list[dict]:
     """Suggest corrections for unsupported claims.
 
     Returns list of suggestions for each unsupported claim.
@@ -294,12 +290,12 @@ def suggest_corrections(verification: dict) -> List[dict]:
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
-def _tokenize(text: str) -> List[str]:
+def _tokenize(text: str) -> list[str]:
     """Simple tokenizer for verification."""
     return re.findall(r'[a-z\u00e0-\u024f]{2,}', text.lower())
 
 
-def _get_ngrams(tokens: List[str], n: int) -> set:
+def _get_ngrams(tokens: list[str], n: int) -> set:
     """Get n-grams from token list."""
     if len(tokens) < n:
         return set()
@@ -346,7 +342,7 @@ def main():
     print(f"Unsupported: {result['unsupported_claims']}")
     print(f"Speculative: {result['speculative_claims']}")
 
-    print(f"\nClaims:")
+    print("\nClaims:")
     for c in result["claims"]:
         status = "✅" if c.get("supported") else ("⚠️" if c["type"] == "speculative" else "❌")
         text = c["text"][:80]
@@ -358,7 +354,7 @@ def main():
 
     corrections = suggest_corrections(result)
     if corrections:
-        print(f"\nCorrections needed:")
+        print("\nCorrections needed:")
         for corr in corrections:
             print(f"  - {corr['original'][:60]}...")
             print(f"    Issue: {corr['issue']}")

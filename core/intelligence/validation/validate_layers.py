@@ -15,17 +15,16 @@ Exit codes:
     1 = FAIL (hard violations found — CI red)
 """
 
-import os
-import sys
-import json
 import argparse
+import json
 import subprocess
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
 
 # Import from sibling module in same directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from audit_layers import classify_path, scan_repository
+from audit_layers import classify_path
 
 
 def _unquote_git_path(line: str) -> str:
@@ -131,7 +130,7 @@ def validate_repository(repo_root: Path, verbose: bool = False) -> dict:
     status = 'PASS' if hard_count == 0 else 'FAIL'
 
     report = {
-        'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+        'generated_at': datetime.now(UTC).isoformat().replace('+00:00', 'Z'),
         'repo_root': str(repo_root),
         'git_tracked_files': len(tracked_files),
         'violations': {

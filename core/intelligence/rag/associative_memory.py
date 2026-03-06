@@ -19,9 +19,7 @@ Data: 2026-03-01
 """
 
 import re
-import sys
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple
 
 from .graph_builder import KnowledgeGraph, get_graph
 
@@ -39,16 +37,16 @@ DEFAULT_TOP_K = 15      # Default results to return
 # ---------------------------------------------------------------------------
 def activate_seeds(
     query: str,
-    graph: Optional[KnowledgeGraph] = None,
+    graph: KnowledgeGraph | None = None,
     max_seeds: int = 10,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Find seed nodes in the graph that match the query.
 
     Uses keyword matching against entity labels and IDs.
     Returns: {entity_id: activation_score}
     """
     g = graph or get_graph()
-    seeds: Dict[str, float] = {}
+    seeds: dict[str, float] = {}
 
     # Tokenize query
     query_lower = query.lower()
@@ -100,11 +98,11 @@ def activate_seeds(
 # ---------------------------------------------------------------------------
 def personalized_pagerank(
     graph: KnowledgeGraph,
-    seeds: Dict[str, float],
+    seeds: dict[str, float],
     alpha: float = PPR_ALPHA,
     max_iter: int = PPR_ITERATIONS,
     tolerance: float = PPR_TOLERANCE,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Run Personalized PageRank from seed nodes.
 
     Args:
@@ -121,19 +119,19 @@ def personalized_pagerank(
 
     # Normalize seed scores to form teleport distribution
     total_seed = sum(seeds.values())
-    teleport: Dict[str, float] = {
+    teleport: dict[str, float] = {
         k: v / total_seed for k, v in seeds.items()
     }
 
     # Initialize scores
     all_nodes = set(graph.entities.keys())
-    scores: Dict[str, float] = defaultdict(float)
+    scores: dict[str, float] = defaultdict(float)
     for node_id, t_score in teleport.items():
         scores[node_id] = t_score
 
     # Iterative PPR
-    for iteration in range(max_iter):
-        new_scores: Dict[str, float] = defaultdict(float)
+    for _iteration in range(max_iter):
+        new_scores: dict[str, float] = defaultdict(float)
 
         # Teleport component
         for node_id, t_score in teleport.items():
@@ -197,8 +195,8 @@ def associative_search(
     query: str,
     top_k: int = DEFAULT_TOP_K,
     exclude_seeds: bool = False,
-    person_filter: Optional[str] = None,
-    graph: Optional[KnowledgeGraph] = None,
+    person_filter: str | None = None,
+    graph: KnowledgeGraph | None = None,
 ) -> dict:
     """Find associatively related concepts using PPR.
 
@@ -237,7 +235,7 @@ def associative_search(
     ppr_scores = personalized_pagerank(g, seeds)
 
     # Step 3: Build results
-    results: List[AssociativeResult] = []
+    results: list[AssociativeResult] = []
 
     for entity_id, score in ppr_scores.items():
         if score <= 0:
@@ -281,8 +279,8 @@ def associative_search(
 
 def find_cross_expert_connections(
     concept: str,
-    source_person: Optional[str] = None,
-    graph: Optional[KnowledgeGraph] = None,
+    source_person: str | None = None,
+    graph: KnowledgeGraph | None = None,
 ) -> dict:
     """Find how a concept from one expert connects to other experts.
 
@@ -305,7 +303,7 @@ def find_cross_expert_connections(
     )
 
     # Group by person
-    by_person: Dict[str, List[dict]] = defaultdict(list)
+    by_person: dict[str, list[dict]] = defaultdict(list)
     for r in result.get("results", []):
         person = r.get("person", "unknown")
         by_person[person].append(r)

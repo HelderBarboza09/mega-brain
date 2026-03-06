@@ -23,16 +23,15 @@ ARQUIVOS CARREGADOS (em ordem):
 """
 
 import json
-import sys
 import os
 import re
-from datetime import datetime, timedelta
+import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Any
 
 # Importar hooks auxiliares
 try:
-    from inbox_age_alert import get_old_files, generate_summary, log_alert
+    from inbox_age_alert import generate_summary, get_old_files, log_alert
     INBOX_ALERT_AVAILABLE = True
 except ImportError:
     INBOX_ALERT_AVAILABLE = False
@@ -124,7 +123,7 @@ def get_project_dir() -> str:
     return os.environ.get('CLAUDE_PROJECT_DIR', os.getcwd())
 
 
-def find_file(file_config: Dict) -> Optional[Path]:
+def find_file(file_config: dict) -> Path | None:
     """Encontra arquivo em múltiplos paths possíveis."""
     project_dir = get_project_dir()
 
@@ -136,7 +135,7 @@ def find_file(file_config: Dict) -> Optional[Path]:
     return None
 
 
-def check_file_age(filepath: Path) -> Dict:
+def check_file_age(filepath: Path) -> dict:
     """Verifica idade do arquivo."""
     try:
         mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
@@ -150,7 +149,7 @@ def check_file_age(filepath: Path) -> Dict:
         return {'modified': None, 'age_hours': 999, 'age_days': 999}
 
 
-def read_file_safe(filepath: Path) -> Optional[str]:
+def read_file_safe(filepath: Path) -> str | None:
     """Lê arquivo com tratamento de erros."""
     try:
         return filepath.read_text(encoding='utf-8')
@@ -162,7 +161,7 @@ def read_file_safe(filepath: Path) -> Optional[str]:
 # CARREGADORES DE ARQUIVOS
 #================================
 
-def load_state() -> Optional[Dict]:
+def load_state() -> dict | None:
     """Carrega STATE.json."""
     filepath = find_file(CRITICAL_FILES['state'])
     if not filepath:
@@ -175,7 +174,7 @@ def load_state() -> Optional[Dict]:
         return None
 
 
-def load_memory_owner() -> Dict:
+def load_memory_owner() -> dict:
     """
     Carrega memória relacional COMPLETA.
 
@@ -245,7 +244,7 @@ def load_memory_owner() -> Dict:
     return memory
 
 
-def generate_memory_injection(memory: Dict) -> str:
+def generate_memory_injection(memory: dict) -> str:
     """Gera prompt de injeção baseado na memória."""
     positives = memory.get('triggers_positive', [])[:5]
     negatives = memory.get('triggers_negative', [])[:5]
@@ -267,7 +266,7 @@ Comportamento calibrado:
 """
 
 
-def load_pending() -> Dict:
+def load_pending() -> dict:
     """Carrega pendências do PENDING.md."""
     filepath = find_file(CRITICAL_FILES['pending'])
     if not filepath:
@@ -317,7 +316,7 @@ def load_pending() -> Dict:
     return pending
 
 
-def load_current_task() -> Optional[Dict]:
+def load_current_task() -> dict | None:
     """Carrega tarefa atual."""
     filepath = find_file(CRITICAL_FILES['current_task'])
     if not filepath:
@@ -360,7 +359,7 @@ def load_current_task() -> Optional[Dict]:
     return task
 
 
-def load_dna_personality() -> Dict:
+def load_dna_personality() -> dict:
     """Carrega DNA de personalidade completo."""
     filepath = find_file(CRITICAL_FILES['dna_personality'])
     if not filepath:
@@ -397,7 +396,7 @@ def load_dna_personality() -> Dict:
     return dna
 
 
-def generate_personality_injection(dna: Dict) -> str:
+def generate_personality_injection(dna: dict) -> str:
     """Gera prompt de personalidade para injeção."""
     phrases = dna.get('signature_phrases', [])
     sarcasm = dna.get('sarcasm_types', [])
@@ -416,7 +415,7 @@ Sempre usar "senhor" para referir-se ao usuário.
 """
 
 
-def load_soul() -> Dict:
+def load_soul() -> dict:
     """Carrega alma do JARVIS."""
     filepath = find_file(CRITICAL_FILES['soul'])
     if not filepath:
@@ -459,7 +458,7 @@ Citações para usar:
     return soul
 
 
-def load_identity_compact() -> Dict:
+def load_identity_compact() -> dict:
     """Carrega identidade compacta."""
     filepath = find_file(CRITICAL_FILES['identity_compact'])
     if not filepath:
@@ -510,7 +509,7 @@ NUNCA usar:
     return identity
 
 
-def load_latest_session() -> Optional[Dict]:
+def load_latest_session() -> dict | None:
     """Carrega última sessão."""
     filepath = find_file(CRITICAL_FILES['latest_session'])
     if not filepath:
@@ -541,7 +540,7 @@ def load_latest_session() -> Optional[Dict]:
     return session
 
 
-def load_boot_sequence() -> Dict:
+def load_boot_sequence() -> dict:
     """
     Carrega o JARVIS Boot Sequence - prompt consolidado de identidade.
 
@@ -568,7 +567,7 @@ def load_boot_sequence() -> Dict:
 # VERIFICAÇÃO DE INTEGRIDADE
 #================================
 
-def check_system_integrity() -> Dict:
+def check_system_integrity() -> dict:
     """Verifica integridade de todos os arquivos críticos."""
     integrity = {
         'all_ok': True,
@@ -578,7 +577,7 @@ def check_system_integrity() -> Dict:
         'warnings': []
     }
 
-    project_dir = get_project_dir()
+    get_project_dir()
 
     for name, config in CRITICAL_FILES.items():
         filepath = find_file(config)
@@ -611,14 +610,14 @@ def check_system_integrity() -> Dict:
 #================================
 
 def generate_consolidated_prompt(
-    state: Optional[Dict],
-    memory: Dict,
-    pending: Dict,
-    current_task: Optional[Dict],
-    identity: Dict,
-    dna: Dict,
-    soul: Dict,
-    boot_sequence: Optional[Dict] = None
+    state: dict | None,
+    memory: dict,
+    pending: dict,
+    current_task: dict | None,
+    identity: dict,
+    dna: dict,
+    soul: dict,
+    boot_sequence: dict | None = None
 ) -> str:
     """
     Gera prompt consolidado para injeção no contexto.
@@ -712,7 +711,7 @@ def format_header() -> str:
 """
 
 
-def format_status_box(state: Optional[Dict], pending: Dict) -> str:
+def format_status_box(state: dict | None, pending: dict) -> str:
     """Formata box de status."""
     if not state:
         mission = "Nenhuma missão ativa"
@@ -738,7 +737,7 @@ def format_status_box(state: Optional[Dict], pending: Dict) -> str:
 """
 
 
-def format_task_box(current_task: Optional[Dict]) -> str:
+def format_task_box(current_task: dict | None) -> str:
     """Formata box de tarefa atual."""
     if not current_task or not current_task.get('objective'):
         return ""
@@ -756,7 +755,7 @@ def format_task_box(current_task: Optional[Dict]) -> str:
 """
 
 
-def format_pending_box(pending: Dict) -> str:
+def format_pending_box(pending: dict) -> str:
     """Formata box de pendências."""
     if pending.get('total', 0) == 0:
         return ""
@@ -783,7 +782,7 @@ def format_pending_box(pending: Dict) -> str:
     return '\n'.join(lines)
 
 
-def format_integrity_warnings(integrity: Dict) -> str:
+def format_integrity_warnings(integrity: dict) -> str:
     """Formata avisos de integridade."""
     if integrity['all_ok'] and not integrity['warnings']:
         return ""
@@ -844,7 +843,7 @@ def main():
         identity = {}  # identity_compact merged into dna_personality
         dna = load_dna_personality()
         soul = load_soul()
-        latest_session = load_latest_session()
+        load_latest_session()
         boot_sequence = load_boot_sequence()
 
         # === GERAR PROMPT CONSOLIDADO ===
@@ -894,7 +893,7 @@ def main():
                 if chronicler_output:
                     output_parts.append("\n")
                     output_parts.append(chronicler_output)
-            except Exception as chron_err:
+            except Exception:
                 # Chronicler é opcional, não bloqueia se falhar
                 pass
 
@@ -930,7 +929,7 @@ def main():
 
     except Exception as e:
         # Em caso de erro, não bloquear
-        print(f"[JARVIS] Hook de inicialização v3 reportou: {str(e)}")
+        print(f"[JARVIS] Hook de inicialização v3 reportou: {e!s}")
         import traceback
         traceback.print_exc()
 

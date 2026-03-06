@@ -2,11 +2,9 @@
 Voice Diarizer — Segment audio by speaker using pyannote.audio (local)
 or AssemblyAI (cloud fallback).
 """
-from pathlib import Path
-from typing import List, Dict, Optional
 
 
-def diarize_local(audio_file: str, num_speakers: Optional[int] = None) -> List[Dict]:
+def diarize_local(audio_file: str, num_speakers: int | None = None) -> list[dict]:
     """
     Diarize using pyannote.audio.
     Returns list of {speaker, start, end} dicts.
@@ -36,15 +34,16 @@ def diarize_local(audio_file: str, num_speakers: Optional[int] = None) -> List[D
         return []
 
 
-def diarize_assemblyai(audio_file: str, num_speakers: Optional[int] = None, language_code: str = "pt") -> List[Dict]:
+def diarize_assemblyai(audio_file: str, num_speakers: int | None = None, language_code: str = "pt") -> list[dict]:
     """
     Diarize using AssemblyAI cloud (fallback).
     Returns list of {speaker, start, end, text} dicts.
     num_speakers: hint to API — avoids collapsing multiple speakers into fewer groups.
     """
     try:
-        import assemblyai as aai
         import os
+
+        import assemblyai as aai
         aai.settings.api_key = os.environ.get("ASSEMBLYAI_API_KEY", "")
         if not aai.settings.api_key:
             return []
@@ -77,7 +76,7 @@ def diarize_assemblyai(audio_file: str, num_speakers: Optional[int] = None, lang
         return []
 
 
-def diarize(audio_file: str, num_speakers: Optional[int] = None, language_code: str = "pt") -> List[Dict]:
+def diarize(audio_file: str, num_speakers: int | None = None, language_code: str = "pt") -> list[dict]:
     """
     Diarize with local-first, cloud fallback strategy.
     Pass num_speakers if you know how many people are in the recording —

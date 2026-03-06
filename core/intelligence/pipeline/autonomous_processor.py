@@ -21,10 +21,10 @@ import os
 import signal
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 # Import TaskOrchestrator from same package
 from core.intelligence.pipeline.task_orchestrator import TaskOrchestrator
@@ -58,7 +58,7 @@ class QueueItem:
     priority: int = 0  # Higher = more priority
     added_at: str = ""
     attempts: int = 0
-    last_attempt: Optional[str] = None
+    last_attempt: str | None = None
     status: str = "pending"  # pending, processing, completed, failed, timeout
 
 
@@ -67,7 +67,7 @@ class ProcessingResult:
     """Result of processing a single file."""
     file_path: str
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
     duration_seconds: float = 0
     attempts: int = 1
 
@@ -76,24 +76,24 @@ class ProcessingResult:
 class ProcessorState:
     """Tracks the autonomous processor state."""
     status: str = "idle"  # idle, running, stopped, completed
-    started_at: Optional[str] = None
-    stopped_at: Optional[str] = None
+    started_at: str | None = None
+    stopped_at: str | None = None
     files_processed: int = 0
     files_failed: int = 0
-    current_file: Optional[str] = None
+    current_file: str | None = None
 
 
 @dataclass
 class MonitoringStatus:
     """Real-time status for external monitoring."""
     status: str  # idle, running, stopped, completed
-    current_file: Optional[str]
+    current_file: str | None
     files_in_queue: int
     files_processed: int
     files_failed: int
-    started_at: Optional[str]
+    started_at: str | None
     last_updated: str
-    current_file_started: Optional[str]
+    current_file_started: str | None
     estimated_remaining_files: int
     avg_file_duration_seconds: float
     error_rate_percent: float
@@ -104,10 +104,10 @@ class Checkpoint:
     """Checkpoint for crash recovery."""
     version: str = "1.0.0"
     created_at: str = ""
-    queue_snapshot: List[Dict[str, Any]] = field(default_factory=list)
-    processor_state: Dict[str, Any] = field(default_factory=dict)
+    queue_snapshot: list[dict[str, Any]] = field(default_factory=list)
+    processor_state: dict[str, Any] = field(default_factory=dict)
     files_processed_since_start: int = 0
-    last_completed_file: Optional[str] = None
+    last_completed_file: str | None = None
 
 
 # ============================================================================
@@ -118,7 +118,7 @@ class FileQueue:
     """FIFO queue with priority support and persistence."""
 
     def __init__(self):
-        self.items: List[QueueItem] = []
+        self.items: list[QueueItem] = []
         self._load()
 
     def add(self, file_path: str, priority: int = 0) -> None:
@@ -141,7 +141,7 @@ class FileQueue:
         self.items.append(item)
         self._save()
 
-    def pop(self) -> Optional[QueueItem]:
+    def pop(self) -> QueueItem | None:
         """Get next file (highest priority first, then FIFO)."""
         pending = [item for item in self.items if item.status == 'pending']
         if not pending:
@@ -154,7 +154,7 @@ class FileQueue:
         self._save()
         return next_item
 
-    def peek(self) -> Optional[QueueItem]:
+    def peek(self) -> QueueItem | None:
         """Preview next file without removing."""
         pending = [item for item in self.items if item.status == 'pending']
         if not pending:
@@ -181,11 +181,11 @@ class FileQueue:
                 self._save()
                 return
 
-    def get_pending(self) -> List[QueueItem]:
+    def get_pending(self) -> list[QueueItem]:
         """Get all pending items."""
         return [item for item in self.items if item.status == 'pending']
 
-    def get_failed(self) -> List[QueueItem]:
+    def get_failed(self) -> list[QueueItem]:
         """Get all failed items (for retry consideration)."""
         return [item for item in self.items if item.status in ['failed', 'timeout']]
 
@@ -203,7 +203,7 @@ class FileQueue:
             return
 
         try:
-            with open(QUEUE_STATE_PATH, 'r') as f:
+            with open(QUEUE_STATE_PATH) as f:
                 data = json.load(f)
 
             self.items = [
@@ -255,11 +255,11 @@ class AutonomousProcessor:
         self.timeout_seconds = DEFAULT_TIMEOUT_SECONDS
         self.checkpoint_interval = checkpoint_interval
         self._files_since_checkpoint = 0
-        self._durations: List[float] = []
-        self._current_file_started: Optional[str] = None
-        self._last_completed_file: Optional[str] = None
+        self._durations: list[float] = []
+        self._current_file_started: str | None = None
+        self._last_completed_file: str | None = None
 
-    def run(self, timeout_seconds: Optional[int] = None) -> Dict[str, Any]:
+    def run(self, timeout_seconds: int | None = None) -> dict[str, Any]:
         """
         Process files until queue empty or stop signal received.
 
@@ -426,7 +426,7 @@ class AutonomousProcessor:
 
             # Execute via orchestrator
             try:
-                result = self.orchestrator.execute({'files': [item.file_path]})
+                self.orchestrator.execute({'files': [item.file_path]})
                 success = True
             except TimeoutException:
                 error = f"Timeout after {self.timeout_seconds}s"
@@ -473,7 +473,7 @@ class AutonomousProcessor:
             return ProcessorState()
 
         try:
-            with open(PROCESSOR_STATE_PATH, 'r') as f:
+            with open(PROCESSOR_STATE_PATH) as f:
                 data = json.load(f)
             return ProcessorState(**data.get('state', {}))
         except Exception as e:
@@ -493,7 +493,7 @@ class AutonomousProcessor:
         with open(PROCESSOR_STATE_PATH, 'w') as f:
             json.dump(data, f, indent=2)
 
-    def _log_event(self, event: Dict[str, Any]) -> None:
+    def _log_event(self, event: dict[str, Any]) -> None:
         """Append event to JSONL log."""
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -502,7 +502,7 @@ class AutonomousProcessor:
         with open(LOG_PATH, 'a') as f:
             f.write(json.dumps(event) + '\n')
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Return current processor status."""
         return {
             'status': self.state.status,
@@ -596,7 +596,7 @@ class AutonomousProcessor:
             self._log_event({'event': 'checkpoint_restore_failed', 'error': str(e)})
             return False
 
-    def resume(self) -> Dict[str, Any]:
+    def resume(self) -> dict[str, Any]:
         """Resume processing from last checkpoint."""
         restored = self._restore_from_checkpoint()
         if not restored:
@@ -695,7 +695,7 @@ def main():
         processor = AutonomousProcessor(checkpoint_interval=checkpoint_interval)
         print(f"Starting autonomous processing (timeout={timeout}s, checkpoint every {checkpoint_interval} files)...")
         result = processor.run(timeout_seconds=timeout)
-        print(f"\nCompleted:")
+        print("\nCompleted:")
         print(f"  Processed: {result['processed']}")
         print(f"  Failed: {result['failed']}")
         print(f"  Stopped by: {result['stopped_by']}")
@@ -755,7 +755,7 @@ def main():
         if not result.get('success', True):
             print(f"Resume failed: {result.get('error')}")
         else:
-            print(f"\nCompleted:")
+            print("\nCompleted:")
             print(f"  Processed: {result.get('processed', 0)}")
             print(f"  Failed: {result.get('failed', 0)}")
 
@@ -787,10 +787,10 @@ if __name__ == '__main__':
 
 __all__ = [
     'AutonomousProcessor',
+    'Checkpoint',
     'FileQueue',
-    'QueueItem',
+    'MonitoringStatus',
     'ProcessingResult',
     'ProcessorState',
-    'MonitoringStatus',
-    'Checkpoint',
+    'QueueItem',
 ]

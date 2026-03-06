@@ -11,12 +11,9 @@ Data: 2026-03-01
 
 import json
 import math
-import os
-import sys
 import time
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from .chunker import Chunk, chunk_all
 
@@ -41,15 +38,15 @@ class BM25Index:
     """Simple BM25 index using term frequencies."""
 
     def __init__(self):
-        self.doc_freqs: Dict[str, int] = {}  # term -> num docs containing it
-        self.doc_lengths: List[int] = []
+        self.doc_freqs: dict[str, int] = {}  # term -> num docs containing it
+        self.doc_lengths: list[int] = []
         self.avg_doc_length: float = 0.0
-        self.term_freqs: List[Dict[str, int]] = []  # per-doc term frequencies
+        self.term_freqs: list[dict[str, int]] = []  # per-doc term frequencies
         self.n_docs: int = 0
         self.k1: float = 1.5
         self.b: float = 0.75
 
-    def build(self, documents: List[str]) -> None:
+    def build(self, documents: list[str]) -> None:
         """Build BM25 index from document texts."""
         self.n_docs = len(documents)
         self.doc_freqs = {}
@@ -69,10 +66,10 @@ class BM25Index:
             sum(self.doc_lengths) / max(self.n_docs, 1)
         )
 
-    def query(self, query_text: str, top_k: int = 30) -> List[Tuple[int, float]]:
+    def query(self, query_text: str, top_k: int = 30) -> list[tuple[int, float]]:
         """Search BM25 index. Returns [(doc_index, score), ...]."""
         query_tokens = _tokenize(query_text)
-        scores: List[float] = [0.0] * self.n_docs
+        scores: list[float] = [0.0] * self.n_docs
 
         for term in query_tokens:
             if term not in self.doc_freqs:
@@ -115,7 +112,7 @@ class BM25Index:
         return idx
 
 
-def _tokenize(text: str) -> List[str]:
+def _tokenize(text: str) -> list[str]:
     """Simple tokenizer: lowercase, split on non-alphanum, filter short."""
     import re
     tokens = re.findall(r'[a-z\u00e0-\u024f]{2,}', text.lower())
@@ -129,10 +126,10 @@ class VectorIndex:
     """Vector similarity index using Voyage AI embeddings."""
 
     def __init__(self):
-        self.vectors: List[List[float]] = []
+        self.vectors: list[list[float]] = []
         self.dim: int = EMBEDDING_DIM
 
-    def build(self, texts: List[str], batch_size: int = VOYAGE_BATCH_SIZE) -> None:
+    def build(self, texts: list[str], batch_size: int = VOYAGE_BATCH_SIZE) -> None:
         """Build vector index by embedding all texts."""
         self.vectors = []
 
@@ -162,7 +159,7 @@ class VectorIndex:
             if i + batch_size < len(texts):
                 time.sleep(0.5)
 
-    def query(self, query_text: str, top_k: int = 30) -> List[Tuple[int, float]]:
+    def query(self, query_text: str, top_k: int = 30) -> list[tuple[int, float]]:
         """Search by vector similarity. Returns [(doc_index, score), ...]."""
         if not self.vectors:
             return []
@@ -197,9 +194,9 @@ class VectorIndex:
         return idx
 
 
-def _cosine_sim(a: List[float], b: List[float]) -> float:
+def _cosine_sim(a: list[float], b: list[float]) -> float:
     """Cosine similarity between two vectors."""
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=False))
     norm_a = math.sqrt(sum(x * x for x in a))
     norm_b = math.sqrt(sum(x * x for x in b))
     if norm_a == 0 or norm_b == 0:
@@ -214,12 +211,12 @@ class HybridIndex:
     """Combined vector + BM25 index with local JSON storage."""
 
     def __init__(self):
-        self.chunks: List[dict] = []
+        self.chunks: list[dict] = []
         self.bm25 = BM25Index()
         self.vector = VectorIndex()
         self.built: bool = False
 
-    def build(self, chunks: Optional[List[Chunk]] = None,
+    def build(self, chunks: list[Chunk] | None = None,
               skip_vectors: bool = False) -> dict:
         """Build both indexes from chunks.
 
@@ -255,7 +252,7 @@ class HybridIndex:
             "vectors_built": not skip_vectors,
         }
 
-    def save(self, index_dir: Optional[Path] = None) -> None:
+    def save(self, index_dir: Path | None = None) -> None:
         """Save index to disk."""
         d = index_dir or INDEX_DIR
         d.mkdir(parents=True, exist_ok=True)
@@ -269,7 +266,7 @@ class HybridIndex:
         with open(d / "vectors.json", "w", encoding="utf-8") as f:
             json.dump(self.vector.to_dict(), f)
 
-    def load(self, index_dir: Optional[Path] = None) -> bool:
+    def load(self, index_dir: Path | None = None) -> bool:
         """Load index from disk. Returns True if loaded."""
         d = index_dir or INDEX_DIR
         chunks_path = d / "chunks.json"
@@ -278,16 +275,16 @@ class HybridIndex:
         if not chunks_path.exists():
             return False
 
-        with open(chunks_path, "r", encoding="utf-8") as f:
+        with open(chunks_path, encoding="utf-8") as f:
             self.chunks = json.load(f)
 
         if bm25_path.exists():
-            with open(bm25_path, "r", encoding="utf-8") as f:
+            with open(bm25_path, encoding="utf-8") as f:
                 self.bm25 = BM25Index.from_dict(json.load(f))
 
         vectors_path = d / "vectors.json"
         if vectors_path.exists():
-            with open(vectors_path, "r", encoding="utf-8") as f:
+            with open(vectors_path, encoding="utf-8") as f:
                 self.vector = VectorIndex.from_dict(json.load(f))
 
         self.built = True
@@ -303,7 +300,7 @@ class HybridIndex:
 # ---------------------------------------------------------------------------
 # SINGLETON
 # ---------------------------------------------------------------------------
-_index: Optional[HybridIndex] = None
+_index: HybridIndex | None = None
 
 
 def get_index() -> HybridIndex:

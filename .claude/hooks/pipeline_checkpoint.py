@@ -24,14 +24,12 @@ Version: 1.0.0
 Date: 2026-02-27
 """
 
+import json
 import os
 import sys
-import json
-import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-
+from typing import Any
 
 #=================================
 # CONFIGURATION
@@ -65,7 +63,7 @@ PIPELINE_PHASES = {
 # STATE MANAGEMENT
 #=================================
 
-def create_default_state() -> Dict[str, Any]:
+def create_default_state() -> dict[str, Any]:
     """
     Create clean state template.
 
@@ -101,7 +99,7 @@ def create_default_state() -> Dict[str, Any]:
     }
 
 
-def load_state() -> Dict[str, Any]:
+def load_state() -> dict[str, Any]:
     """
     Load PIPELINE-STATE.json or return default.
 
@@ -110,7 +108,7 @@ def load_state() -> Dict[str, Any]:
     """
     if STATE_PATH.exists():
         try:
-            with open(STATE_PATH, 'r', encoding='utf-8') as f:
+            with open(STATE_PATH, encoding='utf-8') as f:
                 state = json.load(f)
                 # Ensure all required keys exist
                 if 'version' not in state:
@@ -131,7 +129,7 @@ def load_state() -> Dict[str, Any]:
     return create_default_state()
 
 
-def save_state(state: Dict[str, Any]) -> bool:
+def save_state(state: dict[str, Any]) -> bool:
     """
     Save state to PIPELINE-STATE.json.
 
@@ -159,7 +157,7 @@ def save_state(state: Dict[str, Any]) -> bool:
 # PHASE DETECTION
 #=================================
 
-def detect_phase_from_path(file_path: str) -> Optional[str]:
+def detect_phase_from_path(file_path: str) -> str | None:
     """
     Detect pipeline phase from file path.
 
@@ -179,7 +177,7 @@ def detect_phase_from_path(file_path: str) -> Optional[str]:
     return None
 
 
-def detect_phase_completion(tool_input: Dict[str, Any], state: Dict[str, Any]) -> Optional[str]:
+def detect_phase_completion(tool_input: dict[str, Any], state: dict[str, Any]) -> str | None:
     """
     Detect if a phase has completed based on tool output.
 
@@ -210,7 +208,7 @@ def detect_phase_completion(tool_input: Dict[str, Any], state: Dict[str, Any]) -
 # CHECKPOINT OPERATIONS
 #=================================
 
-def save_checkpoint(phase: str, files: List[str], status: str = 'complete') -> Dict[str, Any]:
+def save_checkpoint(phase: str, files: list[str], status: str = 'complete') -> dict[str, Any]:
     """
     Save checkpoint for a phase.
 
@@ -286,7 +284,7 @@ def can_retry_phase(phase: str) -> bool:
     return status in ['failed', 'pending', 'retry_pending']
 
 
-def get_resume_point() -> Optional[str]:
+def get_resume_point() -> str | None:
     """
     Get the phase to resume from (first incomplete phase).
 
@@ -338,7 +336,7 @@ def mark_for_retry(phase: str) -> bool:
     return False
 
 
-def get_pipeline_status() -> Dict[str, Any]:
+def get_pipeline_status() -> dict[str, Any]:
     """
     Get formatted status of all phases.
 
@@ -374,7 +372,7 @@ def get_pipeline_status() -> Dict[str, Any]:
 # LOGGING
 #=================================
 
-def log_checkpoint(action: Dict[str, Any]) -> None:
+def log_checkpoint(action: dict[str, Any]) -> None:
     """
     Log checkpoint action to JSONL file.
 
@@ -436,7 +434,7 @@ def validate_phase_completion(phase: str) -> bool:
 # MAIN HOOK ENTRY
 #=================================
 
-def process_tool_use(tool_input: Dict[str, Any]) -> Dict[str, Any]:
+def process_tool_use(tool_input: dict[str, Any]) -> dict[str, Any]:
     """
     Process tool use to detect phase activity.
 
@@ -573,7 +571,7 @@ def main():
     except Exception as e:
         error_output = {
             'continue': True,
-            'feedback': f"[JARVIS] Pipeline checkpoint error: {str(e)}",
+            'feedback': f"[JARVIS] Pipeline checkpoint error: {e!s}",
             'error': str(e)
         }
         print(json.dumps(error_output))

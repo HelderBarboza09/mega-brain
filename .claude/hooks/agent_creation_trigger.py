@@ -7,10 +7,10 @@ Hook Events: PostToolUse (Write to role-tracking.md)
 Version: 1.0.0
 """
 
-import sys
 import json
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Thresholds
 CARGO_THRESHOLD = 5
@@ -159,7 +159,7 @@ def main():
         # Don't block on errors
         print(json.dumps({
             "continue": True,
-            "warning": f"Agent creation trigger error: {str(e)}"
+            "warning": f"Agent creation trigger error: {e!s}"
         }))
         sys.exit(0)
 

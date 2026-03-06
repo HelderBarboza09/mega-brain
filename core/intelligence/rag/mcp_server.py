@@ -28,7 +28,7 @@ Data: 2026-03-01
 
 import json
 import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # MCP PROTOCOL (stdio JSON-RPC)
@@ -190,7 +190,7 @@ TOOLS = [
 # ---------------------------------------------------------------------------
 def handle_search_knowledge(params: dict) -> dict:
     """Handle search_knowledge tool call."""
-    from .adaptive_router import route_query, Pipeline
+    from .adaptive_router import Pipeline, route_query
 
     query = params.get("query", "")
     top_k = params.get("top_k", 10)
@@ -220,7 +220,7 @@ def handle_search_knowledge(params: dict) -> dict:
 
 def handle_search_cross_expert(params: dict) -> dict:
     """Handle search_cross_expert tool call."""
-    from .adaptive_router import route_query, Pipeline
+    from .adaptive_router import Pipeline, route_query
 
     query = params.get("query", "")
     top_k = params.get("top_k", 15)
@@ -239,7 +239,7 @@ def handle_search_cross_expert(params: dict) -> dict:
 
 def handle_search_deep(params: dict) -> dict:
     """Handle search_deep tool call."""
-    from .adaptive_router import route_query, Pipeline
+    from .adaptive_router import Pipeline, route_query
 
     query = params.get("query", "")
     top_k = params.get("top_k", 20)
@@ -360,7 +360,7 @@ def handle_request(request: dict) -> None:
                 ],
             })
         except Exception as e:
-            _send_error(req_id, -32000, f"Tool error: {str(e)}")
+            _send_error(req_id, -32000, f"Tool error: {e!s}")
 
     else:
         _send_error(req_id, -32601, f"Unknown method: {method}")

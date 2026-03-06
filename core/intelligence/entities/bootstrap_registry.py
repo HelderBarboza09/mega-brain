@@ -21,18 +21,18 @@ Data: 2026-02-24
 """
 
 import json
-import os
-import re
 import sys
-import yaml
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
 
 # Local imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from entity_normalizer import (
-    create_empty_registry, save_registry, load_taxonomy,
-    normalize_text, REGISTRY_PATH
+    REGISTRY_PATH,
+    create_empty_registry,
+    load_taxonomy,
+    normalize_text,
+    save_registry,
 )
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ DOSSIERS_THEMES = BASE_DIR / "knowledge" / "dossiers" / "themes"
 AGENTS_PERSONS = BASE_DIR / "agents" / "persons"
 AGENTS_CARGO = BASE_DIR / "agents" / "cargo"
 
-NOW = datetime.now(timezone.utc).isoformat()
+NOW = datetime.now(UTC).isoformat()
 
 # ---------------------------------------------------------------------------
 # EXISTING AGENTS MAP (hardcoded from filesystem scan)
@@ -128,7 +128,7 @@ def bootstrap_persons(registry):
     # 1. Migrate from CANONICAL-MAP.json
     canonical_entries = []
     if CANONICAL_MAP_PATH.exists():
-        with open(CANONICAL_MAP_PATH, "r", encoding="utf-8") as f:
+        with open(CANONICAL_MAP_PATH, encoding="utf-8") as f:
             cmap = json.load(f)
         for canonical, aliases_list in cmap.get("canonical_state", {}).get("canonical_map", {}).items():
             alias_names = [a["alias"] for a in aliases_list if a["alias"] != canonical]
@@ -289,7 +289,7 @@ def bootstrap_roles(registry):
                 roles[canonical]["agent_path"] = f"agents/cargo/sales/{slug}/"
 
     # 4. Update status based on mention count and agent presence
-    for k, role in roles.items():
+    for _k, role in roles.items():
         mc = role.get("mention_count", 0)
         if role.get("has_agent"):
             role["status"] = "active"
@@ -466,9 +466,9 @@ def run_bootstrap(dry_run=False):
 
     # Safety check
     if REGISTRY_PATH.exists() and not dry_run:
-        print(f"\n[WARNING] ENTITY-REGISTRY.json already exists!")
+        print("\n[WARNING] ENTITY-REGISTRY.json already exists!")
         print(f"  Path: {REGISTRY_PATH}")
-        print(f"  Use --force to overwrite or --dry-run to preview.")
+        print("  Use --force to overwrite or --dry-run to preview.")
         if "--force" not in sys.argv:
             print("\nAborted. Use --force to overwrite.")
             sys.exit(1)

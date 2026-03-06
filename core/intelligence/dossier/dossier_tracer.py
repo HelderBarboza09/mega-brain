@@ -18,9 +18,9 @@ Data: 2026-03-01
 
 import re
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+
+import yaml
 
 # ---------------------------------------------------------------------------
 # PATHS
@@ -45,12 +45,19 @@ DNA_LAYERS = {
 class DNAEntry:
     """Represents a single DNA entry (heuristic, framework, etc.)."""
 
-    __slots__ = ("id", "layer", "person", "keywords", "content_preview",
-                 "dominios", "chunk_ids")
+    __slots__ = (
+        "chunk_ids",
+        "content_preview",
+        "dominios",
+        "id",
+        "keywords",
+        "layer",
+        "person",
+    )
 
     def __init__(self, entry_id: str, layer: str, person: str,
-                 keywords: List[str], content_preview: str,
-                 dominios: List[str], chunk_ids: List[str]):
+                 keywords: list[str], content_preview: str,
+                 dominios: list[str], chunk_ids: list[str]):
         self.id = entry_id
         self.layer = layer
         self.person = person
@@ -60,7 +67,7 @@ class DNAEntry:
         self.chunk_ids = chunk_ids
 
 
-def _extract_keywords(entry: dict) -> List[str]:
+def _extract_keywords(entry: dict) -> list[str]:
     """Extract matchable keywords from a DNA YAML entry."""
     keywords = []
 
@@ -101,9 +108,9 @@ def _extract_content_preview(entry: dict) -> str:
     return " ".join(parts)[:500].lower()
 
 
-def load_all_dna_entries() -> List[DNAEntry]:
+def load_all_dna_entries() -> list[DNAEntry]:
     """Load all DNA entries from all persons."""
-    entries: List[DNAEntry] = []
+    entries: list[DNAEntry] = []
 
     if not DNA_DIR.exists():
         return entries
@@ -119,7 +126,7 @@ def load_all_dna_entries() -> List[DNAEntry]:
                 continue
 
             try:
-                with open(yaml_path, "r", encoding="utf-8") as f:
+                with open(yaml_path, encoding="utf-8") as f:
                     data = yaml.safe_load(f)
             except (yaml.YAMLError, OSError):
                 continue
@@ -183,7 +190,7 @@ def load_all_dna_entries() -> List[DNAEntry]:
 # ---------------------------------------------------------------------------
 # DOSSIER SCANNER
 # ---------------------------------------------------------------------------
-def _detect_person_from_dossier(filepath: Path) -> Optional[str]:
+def _detect_person_from_dossier(filepath: Path) -> str | None:
     """Try to detect which person a dossier is about from filename."""
     name = filepath.stem.lower()
     # Remove DOSSIER- prefix
@@ -248,7 +255,7 @@ MATCH_THRESHOLD = 0.35  # Minimum score to add a reference
 
 def trace_dossier(
     filepath: Path,
-    dna_entries: List[DNAEntry],
+    dna_entries: list[DNAEntry],
     dry_run: bool = False,
 ) -> dict:
     """Add DNA references to a single dossier file.
@@ -280,7 +287,7 @@ def trace_dossier(
     lines = content.split("\n")
     sections = []
     current_section = ""
-    current_lines: List[str] = []
+    current_lines: list[str] = []
     current_start = 0
 
     # Parse into sections

@@ -2,15 +2,14 @@
 Speaker Labeler — Interactive: show sample phrases, ask user for speaker name.
 Integrates with voice_registry for persistence.
 """
-from typing import List, Dict, Optional
 
 
 def label_unknown_speakers(
-    segments: List[Dict],
+    segments: list[dict],
     max_phrases: int = 6,
     phrase_len: int = 220,
-    expected_speakers: Optional[int] = None,
-) -> Dict[str, str]:
+    expected_speakers: int | None = None,
+) -> dict[str, str]:
     """
     For each unique anonymous speaker in segments, show sample phrases
     and prompt user for identification. Returns mapping {anon_id: name}.
@@ -22,9 +21,9 @@ def label_unknown_speakers(
     from collections import defaultdict
 
     # Collect stats and phrases per speaker
-    speaker_phrases: Dict[str, List[str]] = defaultdict(list)
-    speaker_duration: Dict[str, float] = defaultdict(float)
-    speaker_turns: Dict[str, int] = defaultdict(int)
+    speaker_phrases: dict[str, list[str]] = defaultdict(list)
+    speaker_duration: dict[str, float] = defaultdict(float)
+    speaker_turns: dict[str, int] = defaultdict(int)
 
     for seg in segments:
         spk = seg.get("speaker", "UNKNOWN")
@@ -59,7 +58,7 @@ def label_unknown_speakers(
 
     # ── Per-speaker sample phrases ──
     print("\n─── Sample phrases per speaker ───\n")
-    for i, spk in enumerate(unique_speakers, 1):
+    for _i, spk in enumerate(unique_speakers, 1):
         print(f"[{spk}] ({speaker_turns[spk]} turns, {speaker_duration[spk]:.0f}s)")
         for j, p in enumerate(speaker_phrases[spk], 1):
             print(f"  {j}. {p}")
@@ -75,7 +74,7 @@ def label_unknown_speakers(
     return mapping
 
 
-def apply_labels(segments: List[Dict], mapping: Dict[str, str]) -> List[Dict]:
+def apply_labels(segments: list[dict], mapping: dict[str, str]) -> list[dict]:
     """Apply name mapping to segments."""
     labeled = []
     for seg in segments:

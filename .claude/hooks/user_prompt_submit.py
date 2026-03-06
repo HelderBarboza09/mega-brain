@@ -13,8 +13,8 @@ registrados em settings.json. Este hook foca apenas em intents básicos.
 """
 
 import json
-import sys
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -63,7 +63,7 @@ def load_context_for_intents(intents):
         state_path = Path(project_dir) / '.claude' / 'jarvis' / 'STATE.json'
         if state_path.exists():
             try:
-                with open(state_path, 'r', encoding='utf-8') as f:
+                with open(state_path, encoding='utf-8') as f:
                     state = json.load(f)
                     phase = state.get('current_state', {}).get('phase_name', 'IDLE')
                     pct = state.get('current_state', {}).get('percent_complete', 0)

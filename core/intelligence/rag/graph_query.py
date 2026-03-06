@@ -20,15 +20,15 @@ Data: 2026-03-01
 import re
 import sys
 import time
-from typing import Dict, List, Optional, Tuple
 
+from .associative_memory import associative_search
 from .graph_builder import KnowledgeGraph, detect_communities, get_graph
+from .hybrid_query import hybrid_search
 from .ontology_layer import (
-    LAYER_HIERARCHY, find_by_domain, find_conflicts,
-    query_by_layer, trace_hierarchy,
+    LAYER_HIERARCHY,
+    query_by_layer,
+    trace_hierarchy,
 )
-from .associative_memory import associative_search, find_cross_expert_connections
-from .hybrid_query import hybrid_search, reciprocal_rank_fusion
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -84,7 +84,7 @@ def classify_query(query: str) -> str:
 # ---------------------------------------------------------------------------
 # GRAPH QUERY STRATEGIES
 # ---------------------------------------------------------------------------
-def _query_global(query: str, graph: KnowledgeGraph, top_k: int) -> List[dict]:
+def _query_global(query: str, graph: KnowledgeGraph, top_k: int) -> list[dict]:
     """Global query: find community summaries across experts."""
     communities = detect_communities(graph)
 
@@ -116,7 +116,7 @@ def _query_global(query: str, graph: KnowledgeGraph, top_k: int) -> List[dict]:
     return results[:top_k]
 
 
-def _query_ontological(query: str, graph: KnowledgeGraph, top_k: int) -> List[dict]:
+def _query_ontological(query: str, graph: KnowledgeGraph, top_k: int) -> list[dict]:
     """Ontological query: find entries via OG-RAG ontology layer."""
     results = []
 
@@ -172,7 +172,7 @@ def _query_ontological(query: str, graph: KnowledgeGraph, top_k: int) -> List[di
     return results[:top_k]
 
 
-def _query_associative(query: str, graph: KnowledgeGraph, top_k: int) -> List[dict]:
+def _query_associative(query: str, graph: KnowledgeGraph, top_k: int) -> list[dict]:
     """Associative query: use HippoRAG PPR for cross-expert discovery."""
     assoc_result = associative_search(query, top_k=top_k, graph=graph)
 
@@ -191,7 +191,7 @@ def _query_associative(query: str, graph: KnowledgeGraph, top_k: int) -> List[di
     return results
 
 
-def _query_hierarchical(query: str, graph: KnowledgeGraph, top_k: int) -> List[dict]:
+def _query_hierarchical(query: str, graph: KnowledgeGraph, top_k: int) -> list[dict]:
     """Hierarchical query: trace ontology from one layer to another."""
     results = []
 
@@ -223,8 +223,8 @@ def _query_hierarchical(query: str, graph: KnowledgeGraph, top_k: int) -> List[d
 def graph_search(
     query: str,
     top_k: int = 10,
-    strategy: Optional[str] = None,
-    graph: Optional[KnowledgeGraph] = None,
+    strategy: str | None = None,
+    graph: KnowledgeGraph | None = None,
     include_hybrid: bool = True,
 ) -> dict:
     """Execute a graph-enhanced search query.
@@ -291,16 +291,16 @@ def graph_search(
 
 
 def _fuse_graph_and_hybrid(
-    graph_results: List[dict],
-    hybrid_results: List[dict],
+    graph_results: list[dict],
+    hybrid_results: list[dict],
     top_k: int,
-) -> List[dict]:
+) -> list[dict]:
     """Fuse graph and hybrid results using weighted combination.
 
     Graph results are entity-based, hybrid results are chunk-based.
     We merge by giving each a weighted score contribution.
     """
-    fused: Dict[str, dict] = {}
+    fused: dict[str, dict] = {}
 
     # Score graph results
     for i, r in enumerate(graph_results):

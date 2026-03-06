@@ -12,12 +12,11 @@ Data: 2026-03-01
 """
 
 import json
-import sys
 import time
-import yaml
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+
+import yaml
 
 # ---------------------------------------------------------------------------
 # CONFIG
@@ -64,8 +63,16 @@ REL_TYPES = [
 class Entity:
     """A node in the knowledge graph."""
 
-    __slots__ = ("id", "type", "label", "person", "domains",
-                 "layer", "weight", "metadata")
+    __slots__ = (
+        "domains",
+        "id",
+        "label",
+        "layer",
+        "metadata",
+        "person",
+        "type",
+        "weight",
+    )
 
     def __init__(self, entity_id: str, entity_type: str, label: str, **kwargs):
         self.id = entity_id
@@ -92,7 +99,7 @@ class Entity:
 class Edge:
     """A relationship in the knowledge graph."""
 
-    __slots__ = ("source", "target", "rel_type", "weight", "metadata")
+    __slots__ = ("metadata", "rel_type", "source", "target", "weight")
 
     def __init__(self, source: str, target: str, rel_type: str, **kwargs):
         self.source = source
@@ -117,9 +124,9 @@ class KnowledgeGraph:
     """In-memory knowledge graph with JSON persistence."""
 
     def __init__(self):
-        self.entities: Dict[str, Entity] = {}
-        self.edges: List[Edge] = []
-        self.adj: Dict[str, List[Tuple[str, str, float]]] = defaultdict(list)
+        self.entities: dict[str, Entity] = {}
+        self.edges: list[Edge] = []
+        self.adj: dict[str, list[tuple[str, str, float]]] = defaultdict(list)
         self.built = False
 
     def add_entity(self, entity: Entity) -> None:
@@ -130,25 +137,25 @@ class KnowledgeGraph:
         self.adj[edge.source].append((edge.target, edge.rel_type, edge.weight))
         self.adj[edge.target].append((edge.source, edge.rel_type, edge.weight))
 
-    def get_entity(self, entity_id: str) -> Optional[Entity]:
+    def get_entity(self, entity_id: str) -> Entity | None:
         return self.entities.get(entity_id)
 
-    def get_neighbors(self, entity_id: str, rel_type: Optional[str] = None
-                      ) -> List[Tuple[str, str, float]]:
+    def get_neighbors(self, entity_id: str, rel_type: str | None = None
+                      ) -> list[tuple[str, str, float]]:
         """Get neighbors of an entity. Returns [(entity_id, rel_type, weight)]."""
         neighbors = self.adj.get(entity_id, [])
         if rel_type:
             return [(n, r, w) for n, r, w in neighbors if r == rel_type]
         return neighbors
 
-    def get_entities_by_type(self, entity_type: str) -> List[Entity]:
+    def get_entities_by_type(self, entity_type: str) -> list[Entity]:
         return [e for e in self.entities.values() if e.type == entity_type]
 
-    def get_entities_by_person(self, person: str) -> List[Entity]:
+    def get_entities_by_person(self, person: str) -> list[Entity]:
         return [e for e in self.entities.values()
                 if e.person.lower() == person.lower()]
 
-    def get_entities_by_domain(self, domain: str) -> List[Entity]:
+    def get_entities_by_domain(self, domain: str) -> list[Entity]:
         return [e for e in self.entities.values()
                 if domain.lower() in [d.lower() for d in e.domains]]
 
@@ -169,7 +176,7 @@ class KnowledgeGraph:
             "edges_by_type": dict(rel_counts),
         }
 
-    def save(self, filepath: Optional[Path] = None) -> None:
+    def save(self, filepath: Path | None = None) -> None:
         p = filepath or GRAPH_FILE
         p.parent.mkdir(parents=True, exist_ok=True)
 
@@ -182,12 +189,12 @@ class KnowledgeGraph:
         with open(p, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-    def load(self, filepath: Optional[Path] = None) -> bool:
+    def load(self, filepath: Path | None = None) -> bool:
         p = filepath or GRAPH_FILE
         if not p.exists():
             return False
 
-        with open(p, "r", encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             data = json.load(f)
 
         for eid, edata in data.get("entities", {}).items():
@@ -219,7 +226,7 @@ class KnowledgeGraph:
 # ---------------------------------------------------------------------------
 # GRAPH BUILDER
 # ---------------------------------------------------------------------------
-def build_graph(dna_dir: Optional[Path] = None) -> KnowledgeGraph:
+def build_graph(dna_dir: Path | None = None) -> KnowledgeGraph:
     """Build knowledge graph from all DNA YAML files.
 
     Extracts:
@@ -231,7 +238,7 @@ def build_graph(dna_dir: Optional[Path] = None) -> KnowledgeGraph:
     """
     d = dna_dir or DNA_DIR
     graph = KnowledgeGraph()
-    all_domains: Set[str] = set()
+    all_domains: set[str] = set()
 
     if not d.exists():
         print(f"[GraphBuilder] DNA dir not found: {d}")
@@ -319,10 +326,10 @@ def build_graph(dna_dir: Optional[Path] = None) -> KnowledgeGraph:
     return graph
 
 
-def _load_yaml_entries(filepath: Path, expected_key: str) -> List[dict]:
+def _load_yaml_entries(filepath: Path, expected_key: str) -> list[dict]:
     """Load entries from a DNA YAML file."""
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = yaml.safe_load(f)
     except (yaml.YAMLError, OSError):
         return []
@@ -388,7 +395,7 @@ def _process_config(graph: KnowledgeGraph, config_path: Path,
                     person: str, person_id: str) -> None:
     """Process CONFIG.yaml for person-to-person relationships."""
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             config = yaml.safe_load(f)
     except (yaml.YAMLError, OSError):
         return
@@ -444,7 +451,7 @@ def _process_config(graph: KnowledgeGraph, config_path: Path,
 # COMMUNITY DETECTION (LazyGraphRAG-style)
 # ---------------------------------------------------------------------------
 def detect_communities(graph: KnowledgeGraph,
-                       min_community_size: int = 3) -> List[dict]:
+                       min_community_size: int = 3) -> list[dict]:
     """Simple community detection via connected components on domain subgraphs.
 
     Returns list of communities: [{
@@ -458,7 +465,7 @@ def detect_communities(graph: KnowledgeGraph,
     communities = []
 
     # Group entities by domain
-    domain_entities: Dict[str, Set[str]] = defaultdict(set)
+    domain_entities: dict[str, set[str]] = defaultdict(set)
     for entity in graph.entities.values():
         for domain in entity.domains:
             domain_entities[domain.lower()].add(entity.id)
@@ -487,7 +494,7 @@ def detect_communities(graph: KnowledgeGraph,
 # ---------------------------------------------------------------------------
 # SINGLETON
 # ---------------------------------------------------------------------------
-_graph: Optional[KnowledgeGraph] = None
+_graph: KnowledgeGraph | None = None
 
 
 def get_graph() -> KnowledgeGraph:
@@ -531,10 +538,10 @@ def main():
     stats = graph.stats
     print(f"Entities: {stats['total_entities']}")
     print(f"Edges: {stats['total_edges']}")
-    print(f"\nBy type:")
+    print("\nBy type:")
     for t, c in sorted(stats["entities_by_type"].items()):
         print(f"  {t}: {c}")
-    print(f"\nBy relation:")
+    print("\nBy relation:")
     for r, c in sorted(stats["edges_by_type"].items()):
         print(f"  {r}: {c}")
 

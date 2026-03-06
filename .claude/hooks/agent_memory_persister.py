@@ -25,8 +25,8 @@ Hook Type: SessionEnd
 """
 
 import json
-import sys
 import os
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -53,9 +53,9 @@ def load_state() -> dict:
     if not STATE_FILE.exists():
         return {}
     try:
-        with open(STATE_FILE, 'r', encoding='utf-8') as f:
+        with open(STATE_FILE, encoding='utf-8') as f:
             return json.load(f)
-    except (json.JSONDecodeError, IOError):
+    except (OSError, json.JSONDecodeError):
         return {}
 
 
@@ -138,7 +138,7 @@ def append_to_memory(memory_path: Path, entry: str) -> bool:
         if len(final_lines) > 200:
             header = final_lines[:20]
             recent = final_lines[-175:]
-            final_lines = header + ["", "<!-- Older entries trimmed by agent_memory_persister.py -->", ""] + recent
+            final_lines = [*header, "", "<!-- Older entries trimmed by agent_memory_persister.py -->", "", *recent]
 
         memory_path.write_text('\n'.join(final_lines), encoding='utf-8')
         return True
@@ -158,7 +158,7 @@ def main():
 
     try:
         input_data = sys.stdin.read()
-        hook_input = json.loads(input_data) if input_data.strip() else {}
+        json.loads(input_data) if input_data.strip() else {}
 
         state = load_state()
         if not state:
@@ -207,7 +207,7 @@ def main():
     except Exception as e:
         print(json.dumps({
             "continue": True,
-            "feedback": f"[MB] Memory persister error (fail-open): {str(e)}"
+            "feedback": f"[MB] Memory persister error (fail-open): {e!s}"
         }))
 
 

@@ -5,8 +5,6 @@ Part of phase_0: PRE_VALIDATION in wf-ingest.yaml.
 """
 import re
 from pathlib import Path
-from typing import Optional
-
 
 LABEL_PATTERNS = [
     re.compile(r"^[A-ZÀ-Ú][a-zà-ú\s\-]{2,40}:\s", re.MULTILINE),   # "Nome Sobrenome: texto"

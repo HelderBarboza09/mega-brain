@@ -7,10 +7,10 @@ Hook Events: PostToolUse (Write/Edit to agents/)
 Version: 1.0.0
 """
 
-import sys
 import json
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent.parent
 AGENTS_DIR = BASE_DIR / "agents"
@@ -246,7 +246,7 @@ def main():
     except Exception as e:
         print(json.dumps({
             "continue": True,
-            "warning": f"Agent index update error: {str(e)}"
+            "warning": f"Agent index update error: {e!s}"
         }))
         sys.exit(0)
 

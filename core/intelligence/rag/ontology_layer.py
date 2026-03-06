@@ -17,8 +17,6 @@ Versao: 1.0.0
 Data: 2026-03-01
 """
 
-import sys
-from typing import Dict, List, Optional, Set, Tuple
 
 from .graph_builder import KnowledgeGraph, get_graph
 
@@ -49,7 +47,7 @@ class OntologyResult:
     """Result from an ontology-aware query."""
 
     def __init__(self, entity_id: str, entity_type: str, label: str,
-                 person: str, score: float, path: List[str]):
+                 person: str, score: float, path: list[str]):
         self.entity_id = entity_id
         self.entity_type = entity_type
         self.label = label
@@ -75,8 +73,8 @@ def trace_hierarchy(
     entity_id: str,
     direction: str = "both",
     max_depth: int = DEFAULT_DEPTH,
-    graph: Optional[KnowledgeGraph] = None,
-) -> List[OntologyResult]:
+    graph: KnowledgeGraph | None = None,
+) -> list[OntologyResult]:
     """Trace the ontology hierarchy from an entity.
 
     Args:
@@ -92,8 +90,8 @@ def trace_hierarchy(
     if not entity:
         return []
 
-    results: List[OntologyResult] = []
-    visited: Set[str] = {entity_id}
+    results: list[OntologyResult] = []
+    visited: set[str] = {entity_id}
 
     # Add starting entity
     results.append(OntologyResult(
@@ -119,9 +117,9 @@ def _traverse(
     current_id: str,
     direction: str,
     depth: int,
-    visited: Set[str],
-    path: List[str],
-    results: List[OntologyResult],
+    visited: set[str],
+    path: list[str],
+    results: list[OntologyResult],
 ) -> None:
     """Recursive traversal of ontology hierarchy."""
     if depth <= 0:
@@ -152,7 +150,7 @@ def _traverse(
             continue
 
         visited.add(neighbor_id)
-        new_path = path + [neighbor_id]
+        new_path = [*path, neighbor_id]
         score = weight * (0.8 ** (len(new_path) - 1))  # Decay with distance
 
         results.append(OntologyResult(
@@ -170,10 +168,10 @@ def _traverse(
 
 def query_by_layer(
     layer: str,
-    person: Optional[str] = None,
-    domain: Optional[str] = None,
-    graph: Optional[KnowledgeGraph] = None,
-) -> List[OntologyResult]:
+    person: str | None = None,
+    domain: str | None = None,
+    graph: KnowledgeGraph | None = None,
+) -> list[OntologyResult]:
     """Get all entities of a specific ontology layer.
 
     Args:
@@ -208,8 +206,8 @@ def query_by_layer(
 def find_by_domain(
     domain: str,
     expand: bool = True,
-    graph: Optional[KnowledgeGraph] = None,
-) -> Dict[str, List[OntologyResult]]:
+    graph: KnowledgeGraph | None = None,
+) -> dict[str, list[OntologyResult]]:
     """Find all ontology entries for a domain, grouped by layer.
 
     Args:
@@ -220,7 +218,7 @@ def find_by_domain(
     Returns: {layer: [OntologyResult, ...]} grouped by ontology layer
     """
     g = graph or get_graph()
-    by_layer: Dict[str, List[OntologyResult]] = {
+    by_layer: dict[str, list[OntologyResult]] = {
         layer: [] for layer in LAYER_HIERARCHY
     }
 
@@ -266,8 +264,8 @@ def find_by_domain(
 def find_conflicts(
     person1: str,
     person2: str,
-    graph: Optional[KnowledgeGraph] = None,
-) -> List[dict]:
+    graph: KnowledgeGraph | None = None,
+) -> list[dict]:
     """Find conflicts/tensions between two persons' ontologies.
 
     Returns list of conflict descriptions from CONFIG.yaml conexoes.
@@ -321,10 +319,10 @@ def find_conflicts(
 
 
 def find_numeric_heuristics(
-    domain: Optional[str] = None,
-    person: Optional[str] = None,
-    graph: Optional[KnowledgeGraph] = None,
-) -> List[dict]:
+    domain: str | None = None,
+    person: str | None = None,
+    graph: KnowledgeGraph | None = None,
+) -> list[dict]:
     """Find heuristics with numeric thresholds (decision gates).
 
     These are the most actionable items in the ontology.

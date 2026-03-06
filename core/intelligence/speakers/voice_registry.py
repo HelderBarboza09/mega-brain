@@ -2,10 +2,10 @@
 Voice Registry — Persistent store for voice fingerprints.
 L3 Personal: VOICE-REGISTRY.yaml is gitignored.
 """
-import yaml
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+
+import yaml
 
 REGISTRY_PATH = Path(__file__).parent / "VOICE-REGISTRY.yaml"
 EMBEDDINGS_DIR = Path(__file__).parent / "voice_embeddings"
@@ -28,14 +28,14 @@ def get_all_speakers() -> list:
     return _load_registry().get("speakers", [])
 
 
-def get_speaker_by_id(speaker_id: str) -> Optional[dict]:
+def get_speaker_by_id(speaker_id: str) -> dict | None:
     for s in get_all_speakers():
         if s["id"] == speaker_id:
             return s
     return None
 
 
-def find_speaker_by_name(name: str) -> Optional[dict]:
+def find_speaker_by_name(name: str) -> dict | None:
     for s in get_all_speakers():
         if s["name"].lower() == name.lower():
             return s

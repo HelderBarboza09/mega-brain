@@ -14,15 +14,15 @@ Usage:
     python3 core/intelligence/sync_package_files.py --allowlist   # Print allowlist
     python3 core/intelligence/sync_package_files.py --allowlist --apply  # Write allowlist
 """
-import sys
-import json
 import argparse
-from pathlib import Path
+import json
+import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from audit_layers import scan_repository, classify_path, L2_PATTERNS, L3_PATTERNS, NEVER_PATTERNS
+from audit_layers import L2_PATTERNS, L3_PATTERNS, NEVER_PATTERNS, scan_repository
 
 # Files auto-included by npm (do NOT add to files array)
 NPM_AUTO_INCLUDED = {
@@ -336,7 +336,7 @@ def generate_npmignore(repo_root: Path) -> str:
 
 def generate_allowlist(files_array: list, repo_root: Path) -> str:
     """Generate layer1-allowlist.txt from package.json files array."""
-    now = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    now = datetime.now(UTC).strftime('%Y-%m-%d')
     lines = []
     lines.append("# Layer 1 Allowlist - PUBLIC content (free/community)")
     lines.append("# ==============================================================")

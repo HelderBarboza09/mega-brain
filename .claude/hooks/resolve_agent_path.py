@@ -18,7 +18,6 @@ USAGE:
 """
 
 from pathlib import Path
-from typing import Optional
 
 # Cache to avoid re-parsing YAML on every call within same process
 _index_cache = None
@@ -39,7 +38,7 @@ def _load_index(project_root: Path) -> dict:
 
     try:
         import yaml
-        with open(index_path, 'r', encoding='utf-8') as f:
+        with open(index_path, encoding='utf-8') as f:
             _index_cache = yaml.safe_load(f) or {}
             _index_mtime = current_mtime
             return _index_cache
@@ -74,7 +73,7 @@ def _parse_index_simple(index_path: Path) -> dict:
     return result
 
 
-def _search_agents(index: dict, slug: str) -> Optional[str]:
+def _search_agents(index: dict, slug: str) -> str | None:
     """Search all layers in the index for matching agent slug. Returns path or None."""
 
     # Handle simple parser format
@@ -95,7 +94,7 @@ def _search_agents(index: dict, slug: str) -> Optional[str]:
     # Search nested dict: cargo (sales, marketing, c-level, etc.)
     cargo = index.get('cargo')
     if isinstance(cargo, dict):
-        for area_key, area_agents in cargo.items():
+        for _area_key, area_agents in cargo.items():
             if isinstance(area_agents, list):
                 for agent in area_agents:
                     if isinstance(agent, dict) and agent.get('id') == slug:

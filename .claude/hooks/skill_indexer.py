@@ -10,7 +10,6 @@ REGRA #27: Skills e Sub-Agents são indexados automaticamente no início de cada
 v2.0: Suporta tanto skills quanto sub-agents JARVIS
 """
 
-import json
 import os
 import sys
 from pathlib import Path

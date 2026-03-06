@@ -11,11 +11,12 @@ Triggers:
 """
 
 import json
-import sys
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
+
 
 def get_project_dir():
     """Obtem o diretorio do projeto."""
@@ -27,7 +28,7 @@ def load_pending():
     pending_path = Path(project_dir) / '.claude' / 'jarvis' / 'PENDING.md'
 
     if pending_path.exists():
-        with open(pending_path, 'r', encoding='utf-8') as f:
+        with open(pending_path, encoding='utf-8') as f:
             return f.read()
     return None
 
@@ -39,7 +40,7 @@ def update_pending_file(priority, item, action='add'):
     if not pending_path.exists():
         return False
 
-    with open(pending_path, 'r', encoding='utf-8') as f:
+    with open(pending_path, encoding='utf-8') as f:
         content = f.read()
 
     # Mapear prioridade para secao
