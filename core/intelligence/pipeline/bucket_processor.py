@@ -27,8 +27,18 @@ from core.paths import (
     KNOWLEDGE_EXTERNAL,
     KNOWLEDGE_PERSONAL,
     LOGS,
+    PERSONAL_CALLS,
+    PERSONAL_COGNITIVE,
+    PERSONAL_EMAIL,
+    PERSONAL_MESSAGES,
     ROUTING,
     WORKSPACE,
+    WORKSPACE_AUTOMATIONS,
+    WORKSPACE_FINANCE,
+    WORKSPACE_MEETINGS,
+    WORKSPACE_ORG,
+    WORKSPACE_TEAM,
+    WORKSPACE_TOOLS,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,12 +68,12 @@ BUCKETS = {
         "label": "Business Intelligence",
         "layer": "L2/L3",
         "subdirs": {
-            "org": WORKSPACE / "_org",
-            "team": WORKSPACE / "_team",
-            "finance": WORKSPACE / "_finance",
-            "meetings": WORKSPACE / "_meetings",
-            "automations": WORKSPACE / "_automations",
-            "tools": WORKSPACE / "_tools",
+            "org": WORKSPACE_ORG,
+            "team": WORKSPACE_TEAM,
+            "finance": WORKSPACE_FINANCE,
+            "meetings": WORKSPACE_MEETINGS,
+            "automations": WORKSPACE_AUTOMATIONS,
+            "tools": WORKSPACE_TOOLS,
         },
     },
     "personal": {
@@ -73,10 +83,10 @@ BUCKETS = {
         "label": "Cognitive Layer",
         "layer": "L3",
         "subdirs": {
-            "email": KNOWLEDGE_PERSONAL / "_email",
-            "messages": KNOWLEDGE_PERSONAL / "_messages",
-            "calls": KNOWLEDGE_PERSONAL / "_calls",
-            "cognitive": KNOWLEDGE_PERSONAL / "_cognitive",
+            "email": PERSONAL_EMAIL,
+            "messages": PERSONAL_MESSAGES,
+            "calls": PERSONAL_CALLS,
+            "cognitive": PERSONAL_COGNITIVE,
         },
     },
 }

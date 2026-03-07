@@ -1,7 +1,7 @@
 # Setup Pending
 
 > **Purpose:** Track pending setup items for workspace integrations.
-> **Location:** `knowledge/workspace/SETUP-PENDING.md`
+> **Location:** `workspace/SETUP-PENDING.md`
 > **Updated by:** JARVIS during setup and configuration sessions.
 
 ## How This Works

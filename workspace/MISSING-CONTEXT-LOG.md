@@ -1,13 +1,13 @@
 # Missing Context Log
 
 > **Purpose:** Track business context gaps detected by agents during sessions.
-> **Location:** `knowledge/workspace/MISSING-CONTEXT-LOG.md`
+> **Location:** `workspace/MISSING-CONTEXT-LOG.md`
 > **Updated by:** JARVIS and cargo agents when they detect missing business data.
 
 ## How This Works
 
 When an agent needs business context to answer a question but cannot find it in
-`knowledge/workspace/`, it logs the gap here. This creates a backlog of information
+`workspace/`, it logs the gap here. This creates a backlog of information
 that should be imported into the workspace bucket.
 
 ## Format

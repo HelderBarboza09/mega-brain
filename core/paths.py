@@ -26,13 +26,27 @@ HOOKS = CLAUDE / "hooks"
 COMMANDS = CLAUDE / "commands"
 WORKSPACE = ROOT / "workspace"  # Business data (L1 template, L2 populated)
 
+# ── WORKSPACE SUBDIRS (L1 template, L2 populated) ──────────────
+WORKSPACE_ORG = WORKSPACE / "org"
+WORKSPACE_TEAM = WORKSPACE / "team"
+WORKSPACE_FINANCE = WORKSPACE / "finance"
+WORKSPACE_MEETINGS = WORKSPACE / "meetings"
+WORKSPACE_AUTOMATIONS = WORKSPACE / "automations"
+WORKSPACE_TOOLS = WORKSPACE / "tools"
+WORKSPACE_INBOX = WORKSPACE / "inbox"
+
 # ── GITIGNORED (L3 / Runtime) ────────────────────────────────────
 LOGS = ROOT / "logs"
 INBOX = ROOT / "inbox"
 KNOWLEDGE = ROOT / "knowledge"
 KNOWLEDGE_EXTERNAL = KNOWLEDGE / "external"
 KNOWLEDGE_PERSONAL = KNOWLEDGE / "personal"
-# KNOWLEDGE_WORKSPACE removed — workspace is now at root level (WORKSPACE)
+
+# ── PERSONAL SUBDIRS (L3 only) ─────────────────────────────────
+PERSONAL_EMAIL = KNOWLEDGE_PERSONAL / "email"
+PERSONAL_MESSAGES = KNOWLEDGE_PERSONAL / "messages"
+PERSONAL_CALLS = KNOWLEDGE_PERSONAL / "calls"
+PERSONAL_COGNITIVE = KNOWLEDGE_PERSONAL / "cognitive"
 PROCESSING = ROOT / "processing"
 ARTIFACTS = ROOT / "artifacts"
 DATA = ROOT / ".data"
@@ -93,12 +107,35 @@ ROUTING = {
     "personal_data": KNOWLEDGE_PERSONAL,
     "rag_expert": RAG_EXPERT,
     "rag_business": RAG_BUSINESS,
-    "workspace_inbox": WORKSPACE / "inbox",
+    "workspace_inbox": WORKSPACE_INBOX,
     "personal_inbox": KNOWLEDGE_PERSONAL / "inbox",
     "external_inbox": KNOWLEDGE_EXTERNAL / "inbox",
+    # Workspace subdirs
+    "workspace_org": WORKSPACE_ORG,
+    "workspace_team": WORKSPACE_TEAM,
+    "workspace_finance": WORKSPACE_FINANCE,
+    "workspace_meetings": WORKSPACE_MEETINGS,
+    "workspace_automations": WORKSPACE_AUTOMATIONS,
+    "workspace_tools": WORKSPACE_TOOLS,
+    # Personal subdirs
+    "personal_email": PERSONAL_EMAIL,
+    "personal_messages": PERSONAL_MESSAGES,
+    "personal_calls": PERSONAL_CALLS,
+    "personal_cognitive": PERSONAL_COGNITIVE,
+    # Reference docs
+    "architecture_doc": REFERENCE / "MEGABRAIN-3D-ARCHITECTURE.md",
+    "implementation_log": REFERENCE / "IMPLEMENTATION-LOG.md",
+    "onboarding_guide": REFERENCE / "ONBOARDING-GUIDE.md",
+    "ux_by_area": WORKSPACE_ORG / "UX-BY-AREA.md",
     # Log templates (L1 — mechanism, not data)
     "workspace_log_template": CORE / "templates" / "logs" / "WORKSPACE-LOG-TEMPLATE.md",
     "personal_log_template": CORE / "templates" / "logs" / "PERSONAL-LOG-TEMPLATE.md",
+    # Read.ai integration
+    "read_ai_log": LOGS / "read-ai-harvest",
+    "read_ai_state": MISSION_CONTROL / "READ-AI-STATE.json",
+    "read_ai_staging": PROCESSING / "read-ai-staging",
+    # Phase gate state
+    "phase_gate_state": MISSION_CONTROL / "PHASE-GATE-STATE.json",
 }
 
 # ── PROHIBITED DIRECTORIES ───────────────────────────────────────

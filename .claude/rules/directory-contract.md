@@ -18,19 +18,19 @@ knowledge/
 │   ├── sources/        → Source compilations
 │   └── inbox/          → Raw expert materials
 └── personal/       ← Bucket 3: Cognitive/Private (L3 ONLY)
-    ├── _email/         → Email digests
-    ├── _messages/      → WhatsApp/Slack
-    ├── _calls/         → Call transcripts
-    ├── _cognitive/     → Mental models, reflections
+    ├── email/          → Email digests
+    ├── messages/       → WhatsApp/Slack
+    ├── calls/          → Call transcripts
+    ├── cognitive/      → Mental models, reflections
     └── inbox/          → Raw personal materials
 
 workspace/              ← Bucket 2: Business Data (ROOT level, L1 template / L2 populated)
-├── _org/               → Organization structure
-├── _team/              → Team data
-├── _finance/           → Financial data
-├── _meetings/          → Meeting notes
-├── _automations/       → Tool configs
-├── _tools/             → Detected tools log
+├── org/                → Organization structure
+├── team/               → Team data
+├── finance/            → Financial data
+├── meetings/           → Meeting notes
+├── automations/        → Tool configs
+├── tools/              → Detected tools log
 └── inbox/              → Raw business materials
 ```
 

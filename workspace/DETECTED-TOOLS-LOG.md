@@ -1,7 +1,7 @@
 # Detected Tools Log
 
 > **Purpose:** Track tools and platforms detected during sessions.
-> **Location:** `knowledge/workspace/DETECTED-TOOLS-LOG.md`
+> **Location:** `workspace/DETECTED-TOOLS-LOG.md`
 > **Updated by:** JARVIS when tools/platforms are mentioned in conversations.
 
 ## How This Works

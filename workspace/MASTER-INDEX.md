@@ -1,7 +1,7 @@
 # Workspace Master Index
 
 > **Purpose:** Human-readable index of all workspace content.
-> **Location:** `knowledge/workspace/MASTER-INDEX.md`
+> **Location:** `workspace/MASTER-INDEX.md`
 > **Updated by:** JARVIS after any workspace content changes.
 
 ## Directory Overview

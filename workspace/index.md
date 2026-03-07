@@ -13,7 +13,7 @@ context that transforms generic expert knowledge into actionable recommendations
 ## Structure
 
 ```
-knowledge/workspace/
+workspace/
   _org/             -- Organization charts, role definitions, SOWs
   _team/            -- Team profiles, performance data, hiring pipeline
   _finance/         -- Financial data, KPIs, DRE, unit economics
@@ -39,8 +39,8 @@ knowledge/workspace/
 ```python
 from core.paths import KNOWLEDGE_WORKSPACE, ROUTING
 
-ROUTING["workspace_data"]   # -> knowledge/workspace/
-ROUTING["workspace_inbox"]  # -> knowledge/workspace/inbox/
+ROUTING["workspace_data"]   # -> workspace/
+ROUTING["workspace_inbox"]  # -> workspace/inbox/
 ROUTING["rag_business"]     # -> .data/rag_business/ (index built from this bucket)
 ```
 
