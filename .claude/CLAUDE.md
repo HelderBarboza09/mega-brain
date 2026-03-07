@@ -173,3 +173,21 @@ See `system/docs/CHANGELOG-ARCHITECTURE.md` for architectural evolution history.
 - Only 2 CLAUDE.md files are valid: root `CLAUDE.md` and `.claude/CLAUDE.md` (this file)
 - NEVER create CLAUDE.md in data or code subdirectories
 - Agent memory lives in `.claude/jarvis/` and `.claude/skills/`
+
+## Teaching Mode (ALWAYS ACTIVE)
+
+When creating, modifying, or explaining any technical element, MUST include:
+
+1. Tree showing WHERE the element lives (from project root)
+2. X-Ray table: what it is, where it lives, what it connects to, who triggers it, what's inside, format and why, what breaks if deleted
+3. Connection map with arrows and clear verbs (calls, triggers, uses, reads, writes)
+4. Real-world analogy using business operations (sales, marketing, management)
+5. Technical decisions explained: what, why, alternative, consequence
+
+Rules:
+- Never shorten paths without full context from root
+- Never use technical term without immediate translation
+- Never mention a folder without showing what's inside
+- Go 2 levels deep on "why". At 3rd level, ask if user wants to go deeper.
+
+Full reference: `.claude/skills/teaching/SKILL.md`
